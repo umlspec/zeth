@@ -11,7 +11,7 @@ from web3 import Web3, HTTPProvider  # type: ignore
 
 w3 = Web3(HTTPProvider("http://localhost:8545"))
 
-zero_units_hex = "0000000000000000"
+ZERO_UNITS_HEX = "0000000000000000"
 BOB_DEPOSIT_ETH = 200
 BOB_SPLIT_1_ETH = 100
 BOB_SPLIT_2_ETH = 100
@@ -61,7 +61,7 @@ def bob_deposit(
             zeth.utils.int64_to_hex(note1_value),  # value output note 1
             zeth.utils.int64_to_hex(note2_value),  # value output note 2
             zeth.utils.int64_to_hex(v_in),  # v_in
-            zero_units_hex,  # v_out
+            ZERO_UNITS_HEX,  # v_out
             zksnark
     )
 
@@ -157,8 +157,8 @@ def bob_to_charlie(
             charlie_apk,  # recipient2 (transfer)
             zeth.utils.int64_to_hex(note1_value),  # value output note 1
             zeth.utils.int64_to_hex(note2_value),  # value output note 2
-            zero_units_hex,  # v_in
-            zero_units_hex,  # v_out
+            ZERO_UNITS_HEX,  # v_in
+            ZERO_UNITS_HEX,  # v_out
             zksnark
         )
 
@@ -252,8 +252,8 @@ def charlie_withdraw(
             charlie_apk,  # recipient1
             charlie_apk,  # recipient2
             zeth.utils.int64_to_hex(note1_value),  # value output note 1
-            zero_units_hex,  # value output note 2
-            zero_units_hex,  # v_in
+            ZERO_UNITS_HEX,  # value output note 2
+            ZERO_UNITS_HEX,  # v_in
             zeth.utils.int64_to_hex(v_out),  # v_out
             zksnark
         )
@@ -354,8 +354,8 @@ def charlie_double_withdraw(
             charlie_apk,  # recipient1
             charlie_apk,  # recipient2
             zeth.utils.int64_to_hex(note1_value),  # value output note 1
-            zero_units_hex,  # value output note 2
-            zero_units_hex,  # v_in
+            ZERO_UNITS_HEX,  # value output note 2
+            ZERO_UNITS_HEX,  # v_in
             zeth.utils.int64_to_hex(v_out),  # v_out
             zksnark
         )

@@ -7,13 +7,15 @@ disable=
     missing-function-docstring,
     too-many-locals,
     too-many-statements,
-    invalid-name,
     wrong-import-order,
     missing-module-docstring,
     broad-except,
     no-member,
     too-many-function-args,
     duplicate-code,
+
+good-names=i,e,x,y,m,k,h,c,cm,rc,ek,ct,vk,sk,X,Y,r,el,nf,w3
+
 
 [REPORTS]
 output-format=text

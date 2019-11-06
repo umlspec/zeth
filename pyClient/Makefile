@@ -1,12 +1,12 @@
 
-.PHONY: setup check test syntax grpc
+.PHONY: setup setup-dev dev check test syntax grpc
 
 setup:
 	pip install --upgrade pip
 	pip install -e .
 	$(MAKE) grpc
 
-dev:
+dev setup-dev:
 	pip install --upgrade pip
 	pip install -e .
 	$(MAKE) grpc

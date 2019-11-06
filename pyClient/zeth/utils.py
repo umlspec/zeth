@@ -14,11 +14,11 @@ import nacl.utils  # type: ignore
 from nacl.public import PrivateKey, PublicKey, Box  # type: ignore
 from web3 import Web3, HTTPProvider  # type: ignore
 
-w3 = Web3(HTTPProvider(constants.WEB3_HTTP_PROVIDER))
-
 # Value of a single unit (in Wei) of vpub_in and vpub_out.  Use Szabos (10^12
 # Wei).
 ZETH_PUBLIC_UNIT_VALUE = 1000000000000
+
+W3 = Web3(HTTPProvider(constants.WEB3_HTTP_PROVIDER))
 
 
 def int64_to_hex(number):
@@ -134,13 +134,13 @@ def compute_merkle_path(address_commitment, tree_depth, byte_tree):
         if (address % 2) == 0:
             print("append note at address: " + str(address - 1))
             # [2:] to strip the 0x prefix
-            merkle_path.append(w3.toHex(byte_tree[address - 1])[2:])
+            merkle_path.append(W3.toHex(byte_tree[address - 1])[2:])
             # -1 because we decided to start counting from 0 (which is the
             # index of the root node)
             address = int(address/2) - 1
         else:
             print("append note at address: " + str(address + 1))
-            merkle_path.append(w3.toHex(byte_tree[address + 1])[2:])
+            merkle_path.append(W3.toHex(byte_tree[address + 1])[2:])
             address = int(address/2)
     return merkle_path
 

@@ -94,11 +94,9 @@ def gen_note_randomness():
     Non-Malleability update, rho is computed from phi (see above), the rho
     generated in this function is thus obsolete except for dummy input notes.
     """
-    rand_rho = bytes(Random.get_random_bytes(32)).hex()
-    rand_trapR = bytes(Random.get_random_bytes(48)).hex()
     randomness = {
-        "rho": rand_rho,
-        "trapR": rand_trapR
+        "rho": bytes(Random.get_random_bytes(32)).hex(),
+        "trapR": bytes(Random.get_random_bytes(48)).hex(),
     }
     return randomness
 
@@ -294,14 +292,14 @@ def gen_apk_ask_keypair():
 
 
 def create_joinsplit_input(merkle_path, address, note, ask, nullifier):
-    jsInput = util_pb2.JSInput(
+    js_input = util_pb2.JSInput(
         merkleNode=merkle_path,
         address=address,
         note=note,
         spendingASK=ask,
         nullifier=nullifier
     )
-    return jsInput
+    return js_input
 
 
 def gen_one_time_schnorr_vk_sk_pair():
@@ -378,8 +376,8 @@ def encode_pub_input_to_hash(messages):
                constants.JS_INPUTS),
         2
     ):
-        hi = field_elements_to_hex(messages[i], messages[i+1])
-        hi_encoded = encode_single("bytes32", bytes.fromhex(hi))
+        i_hex = field_elements_to_hex(messages[i], messages[i+1])
+        hi_encoded = encode_single("bytes32", bytes.fromhex(i_hex))
         input_sha += hi_encoded
 
     return input_sha
@@ -452,11 +450,11 @@ def sign(keypair, hash_ciphers, hash_proof, hash_inputs):
     return sigma
 
 
-def parse_hexadecimalPointBaseGroup1Affine(point):
+def parse_hex_point_base_group1_affine(point):
     return [point.xCoord, point.yCoord]
 
 
-def parse_hexadecimalPointBaseGroup2Affine(point):
+def parse_hex_point_base_group2_affine(point):
     return [
         [point.xC1Coord, point.xC0Coord],
         [point.yC1Coord, point.yC0Coord]
@@ -467,40 +465,40 @@ def make_empty_message():
     return empty_pb2.Empty()
 
 
-def parse_verification_key_PGHR13(vk_obj):
+def parse_verification_key_pghr13(vk_obj):
     vk_json = {}
-    vk_json["a"] = parse_hexadecimalPointBaseGroup2Affine(
+    vk_json["a"] = parse_hex_point_base_group2_affine(
         vk_obj.r1csPpzksnarkVerificationKey.a)
-    vk_json["b"] = parse_hexadecimalPointBaseGroup1Affine(
+    vk_json["b"] = parse_hex_point_base_group1_affine(
         vk_obj.r1csPpzksnarkVerificationKey.b)
-    vk_json["c"] = parse_hexadecimalPointBaseGroup2Affine(
+    vk_json["c"] = parse_hex_point_base_group2_affine(
         vk_obj.r1csPpzksnarkVerificationKey.c)
-    vk_json["g"] = parse_hexadecimalPointBaseGroup2Affine(
+    vk_json["g"] = parse_hex_point_base_group2_affine(
         vk_obj.r1csPpzksnarkVerificationKey.g)
-    vk_json["gb1"] = parse_hexadecimalPointBaseGroup1Affine(
+    vk_json["gb1"] = parse_hex_point_base_group1_affine(
         vk_obj.r1csPpzksnarkVerificationKey.gb1)
-    vk_json["gb2"] = parse_hexadecimalPointBaseGroup2Affine(
+    vk_json["gb2"] = parse_hex_point_base_group2_affine(
         vk_obj.r1csPpzksnarkVerificationKey.gb2)
-    vk_json["z"] = parse_hexadecimalPointBaseGroup2Affine(
+    vk_json["z"] = parse_hex_point_base_group2_affine(
         vk_obj.r1csPpzksnarkVerificationKey.z)
     vk_json["IC"] = json.loads(vk_obj.r1csPpzksnarkVerificationKey.IC)
     return vk_json
 
 
-def parse_verification_key_GROTH16(vk_obj):
+def parse_verification_key_groth16(vk_obj):
     vk_json = {}
-    vk_json["alpha_g1"] = parse_hexadecimalPointBaseGroup1Affine(vk_obj.r1csGgPpzksnarkVerificationKey.alpha_g1)
-    vk_json["beta_g2"] = parse_hexadecimalPointBaseGroup2Affine(vk_obj.r1csGgPpzksnarkVerificationKey.beta_g2)
-    vk_json["delta_g2"] = parse_hexadecimalPointBaseGroup2Affine(vk_obj.r1csGgPpzksnarkVerificationKey.delta_g2)
+    vk_json["alpha_g1"] = parse_hex_point_base_group1_affine(vk_obj.r1csGgPpzksnarkVerificationKey.alpha_g1)
+    vk_json["beta_g2"] = parse_hex_point_base_group2_affine(vk_obj.r1csGgPpzksnarkVerificationKey.beta_g2)
+    vk_json["delta_g2"] = parse_hex_point_base_group2_affine(vk_obj.r1csGgPpzksnarkVerificationKey.delta_g2)
     vk_json["abc_g1"] = json.loads(vk_obj.r1csGgPpzksnarkVerificationKey.abc_g1)
     return vk_json
 
 
 def parse_verification_key(vk_obj, zksnark):
     if zksnark == constants.PGHR13_ZKSNARK:
-        return parse_verification_key_PGHR13(vk_obj)
+        return parse_verification_key_pghr13(vk_obj)
     if zksnark == constants.GROTH16_ZKSNARK:
-        return parse_verification_key_GROTH16(vk_obj)
+        return parse_verification_key_groth16(vk_obj)
     sys.exit(errors.SNARK_NOT_SUPPORTED)
 
 
@@ -515,7 +513,7 @@ def write_verification_key(vk_obj, zksnark):
         json.dump(vk_json, outfile)
 
 
-def make_proofInputs(root, joinsplit_inputs, joinsplit_outputs, public_input_value, public_output_value, hsig, phi):
+def make_proof_inputs(root, joinsplit_inputs, joinsplit_outputs, public_input_value, public_output_value, hsig, phi):
     return prover_pb2.ProofInputs(
         root=root,
         jsInputs=joinsplit_inputs,
@@ -527,34 +525,34 @@ def make_proofInputs(root, joinsplit_inputs, joinsplit_outputs, public_input_val
     )
 
 
-def parse_proof_PGHR13(proof_obj):
+def parse_proof_pghr13(proof_obj):
     proof_json = {}
-    proof_json["a"] = parse_hexadecimalPointBaseGroup1Affine(proof_obj.r1csPpzksnarkExtendedProof.a)
-    proof_json["a_p"] = parse_hexadecimalPointBaseGroup1Affine(proof_obj.r1csPpzksnarkExtendedProof.aP)
-    proof_json["b"] = parse_hexadecimalPointBaseGroup2Affine(proof_obj.r1csPpzksnarkExtendedProof.b)
-    proof_json["b_p"] = parse_hexadecimalPointBaseGroup1Affine(proof_obj.r1csPpzksnarkExtendedProof.bP)
-    proof_json["c"] = parse_hexadecimalPointBaseGroup1Affine(proof_obj.r1csPpzksnarkExtendedProof.c)
-    proof_json["c_p"] = parse_hexadecimalPointBaseGroup1Affine(proof_obj.r1csPpzksnarkExtendedProof.cP)
-    proof_json["h"] = parse_hexadecimalPointBaseGroup1Affine(proof_obj.r1csPpzksnarkExtendedProof.h)
-    proof_json["k"] = parse_hexadecimalPointBaseGroup1Affine(proof_obj.r1csPpzksnarkExtendedProof.k)
+    proof_json["a"] = parse_hex_point_base_group1_affine(proof_obj.r1csPpzksnarkExtendedProof.a)
+    proof_json["a_p"] = parse_hex_point_base_group1_affine(proof_obj.r1csPpzksnarkExtendedProof.aP)
+    proof_json["b"] = parse_hex_point_base_group2_affine(proof_obj.r1csPpzksnarkExtendedProof.b)
+    proof_json["b_p"] = parse_hex_point_base_group1_affine(proof_obj.r1csPpzksnarkExtendedProof.bP)
+    proof_json["c"] = parse_hex_point_base_group1_affine(proof_obj.r1csPpzksnarkExtendedProof.c)
+    proof_json["c_p"] = parse_hex_point_base_group1_affine(proof_obj.r1csPpzksnarkExtendedProof.cP)
+    proof_json["h"] = parse_hex_point_base_group1_affine(proof_obj.r1csPpzksnarkExtendedProof.h)
+    proof_json["k"] = parse_hex_point_base_group1_affine(proof_obj.r1csPpzksnarkExtendedProof.k)
     proof_json["inputs"] = json.loads(proof_obj.r1csPpzksnarkExtendedProof.inputs)
     return proof_json
 
 
-def parse_proof_GROTH16(proof_obj):
+def parse_proof_groth16(proof_obj):
     proof_json = {}
-    proof_json["a"] = parse_hexadecimalPointBaseGroup1Affine(proof_obj.r1csGgPpzksnarkExtendedProof.a)
-    proof_json["b"] = parse_hexadecimalPointBaseGroup2Affine(proof_obj.r1csGgPpzksnarkExtendedProof.b)
-    proof_json["c"] = parse_hexadecimalPointBaseGroup1Affine(proof_obj.r1csGgPpzksnarkExtendedProof.c)
+    proof_json["a"] = parse_hex_point_base_group1_affine(proof_obj.r1csGgPpzksnarkExtendedProof.a)
+    proof_json["b"] = parse_hex_point_base_group2_affine(proof_obj.r1csGgPpzksnarkExtendedProof.b)
+    proof_json["c"] = parse_hex_point_base_group1_affine(proof_obj.r1csGgPpzksnarkExtendedProof.c)
     proof_json["inputs"] = json.loads(proof_obj.r1csGgPpzksnarkExtendedProof.inputs)
     return proof_json
 
 
 def parse_proof(proof_obj, zksnark):
     if zksnark == constants.PGHR13_ZKSNARK:
-        return parse_proof_PGHR13(proof_obj)
+        return parse_proof_pghr13(proof_obj)
     if zksnark == constants.GROTH16_ZKSNARK:
-        return parse_proof_GROTH16(proof_obj)
+        return parse_proof_groth16(proof_obj)
     return sys.exit(errors.SNARK_NOT_SUPPORTED)
 
 
@@ -604,7 +602,7 @@ def get_proof_joinsplit_2_by_2(
         output_note1
     ]
 
-    proof_input = make_proofInputs(mk_root, js_inputs, js_outputs, public_in_value, public_out_value, h_sig, phi)
+    proof_input = make_proof_inputs(mk_root, js_inputs, js_outputs, public_in_value, public_out_value, h_sig, phi)
     proof_obj = get_proof(grpc_endpoint, proof_input)
     proof_json = parse_proof(proof_obj, zksnark)
 
