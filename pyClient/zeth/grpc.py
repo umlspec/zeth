@@ -105,7 +105,7 @@ def gen_note_randomness():
 
 def create_zeth_note(randomness, recipient_apk, value):
     """
-    We follow the formatting of the proto file.  Create a ZethNote description
+    We follow the formatting of the proto file. Create a ZethNote description
     Starting the Non-Malleability update, this function is used only for dummy
     input notes as rhoS are now structured ( rho = PRF_{phi}(i, phi, h_sig) ).
     """
@@ -120,7 +120,7 @@ def create_zeth_note(randomness, recipient_apk, value):
 
 def create_zeth_notes(phi, hsig, recipient_apk0, value0, recipient_apk1, value1):
     """
-    Create two ordered ZethNotes.  This function is used to generate new output
+    Create two ordered ZethNotes. This function is used to generate new output
     notes.
     """
     rho0 = compute_rho_i(phi, hsig, 0)
