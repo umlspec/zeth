@@ -329,7 +329,7 @@ def encode_pub_input_to_hash(messages):
     if any(isinstance(el, list) for el in messages):
         new_list = []
         for el in messages:
-            if type(el) == list:
+            if isinstance(el, list):
                 new_list.extend(el)
             else:
                 new_list.append(el)
@@ -499,10 +499,9 @@ def parse_verification_key_GROTH16(vk_obj):
 def parse_verification_key(vk_obj, zksnark):
     if zksnark == constants.PGHR13_ZKSNARK:
         return parse_verification_key_PGHR13(vk_obj)
-    elif zksnark == constants.GROTH16_ZKSNARK:
+    if zksnark == constants.GROTH16_ZKSNARK:
         return parse_verification_key_GROTH16(vk_obj)
-    else:
-        return sys.exit(errors.SNARK_NOT_SUPPORTED)
+    sys.exit(errors.SNARK_NOT_SUPPORTED)
 
 
 def write_verification_key(vk_obj, zksnark):
@@ -554,10 +553,9 @@ def parse_proof_GROTH16(proof_obj):
 def parse_proof(proof_obj, zksnark):
     if zksnark == constants.PGHR13_ZKSNARK:
         return parse_proof_PGHR13(proof_obj)
-    elif zksnark == constants.GROTH16_ZKSNARK:
+    if zksnark == constants.GROTH16_ZKSNARK:
         return parse_proof_GROTH16(proof_obj)
-    else:
-        return sys.exit(errors.SNARK_NOT_SUPPORTED)
+    return sys.exit(errors.SNARK_NOT_SUPPORTED)
 
 
 def get_proof_joinsplit_2_by_2(

@@ -42,7 +42,7 @@ def hex_to_int(elements):
     ints = []
     for el in elements:
         ints.append(int(el, 16))
-    return(ints)
+    return ints
 
 
 def hex_extend_32bytes(element):
@@ -118,7 +118,7 @@ def convert_leaf_address_to_node_address(address_leaf, tree_depth):
     Important note: The merkle root index is 0 (not 1!)
     """
     address = address_leaf + (2 ** tree_depth - 1)
-    if(address > 2 ** (tree_depth + 1) - 1):
+    if address > (2 ** (tree_depth + 1) - 1):
         return -1
     return address
 
@@ -127,11 +127,11 @@ def compute_merkle_path(address_commitment, tree_depth, byte_tree):
     merkle_path = []
     address_bits = []
     address = convert_leaf_address_to_node_address(address_commitment, tree_depth)
-    if(address == -1):
+    if address == -1:
         return merkle_path  # return empty merkle_path
-    for i in range(0, tree_depth):
+    for _ in range(0, tree_depth):
         address_bits.append(address % 2)
-        if (address % 2 == 0):
+        if (address % 2) == 0:
             print("append note at address: " + str(address - 1))
             # [2:] to strip the 0x prefix
             merkle_path.append(w3.toHex(byte_tree[address - 1])[2:])
@@ -213,7 +213,7 @@ def encode_to_hash(messages):
     if any(isinstance(el, list) for el in messages):
         new_list = []
         for el in messages:
-            if type(el) == list:
+            if isinstance(el, list):
                 new_list.extend(el)
             else:
                 new_list.append(el)
@@ -224,9 +224,9 @@ def encode_to_hash(messages):
         m_hex = m
 
         # Convert it into a hex
-        if type(m) == int:
+        if isinstance(m, int):
             m_hex = "{0:0>4X}".format(m)
-        elif (type(m) == str) and (m[1] == "x"):
+        elif isinstance(m, str) and (m[1] == "x"):
             m_hex = m[2:]
 
         # [SANITY CHECK] Make sure the hex is 32 byte long

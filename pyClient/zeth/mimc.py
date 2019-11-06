@@ -26,11 +26,11 @@ class MiMC7:
         key = ek % self.prime
 
         # In the paper the first round constant is set to 0
-        res = self.mimc_round(res, key,  0)
+        res = self.mimc_round(res, key, 0)
 
         round_constant = sha3_256(seed)
 
-        for i in range(rounds - 1):
+        for _ in range(rounds - 1):
             round_constant = sha3_256(round_constant)
             res = self.mimc_round(res, key, round_constant)
 
@@ -44,29 +44,27 @@ class MiMC7:
 
 
 def to_bytes(*args):
-    for i, _ in enumerate(args):
-        if isinstance(_, str):
-            yield _.encode('ascii')
-        elif not isinstance(_, int) and hasattr(_, 'to_bytes'):
+    for arg in args:
+        if isinstance(arg, str):
+            yield arg.encode('ascii')
+        elif not isinstance(arg, int) and hasattr(arg, 'to_bytes'):
             # for 'F_p' or 'FQ' class etc.
-            yield _.to_bytes('big')
-        elif isinstance(_, bytes):
-            yield _
+            yield arg.to_bytes('big')
+        elif isinstance(arg, bytes):
+            yield arg
         else:
             # Try conversion to integer first?
-            yield int(_).to_bytes(32, 'big')
+            yield int(arg).to_bytes(32, 'big')
 
 
 def to_int(value):
-    if type(value) != int:
-        if type(value) == bytes:
+    if not isinstance(value, int):
+        if isinstance(value, bytes):
             return int.from_bytes(value, "big")
-        elif type(value) == str:
+        if isinstance(value, str):
             return int.from_bytes(bytes(value, "utf8"), "big")
-        else:
-            return -1
-    else:
-        return value
+        return -1
+    return value
 
 
 def sha3_256(*args):
@@ -106,11 +104,11 @@ def main():
 
     # Generating test vector for MiMC Hash
     m = MiMC7("clearmatics_mt_seed")
-    hash = m.mimc_mp(
+    digest = m.mimc_mp(
         3703141493535563179657531719960160174296085208671919316200479060314459804651,
         15683951496311901749339509118960676303290224812129752890706581988986633412003)
     print("Hash result:")
-    print(hash)
+    print(digest)
 
     # Generating test vectors for testing the MiMC Merkle Tree contract
     print("Test vector for testMimCHash")

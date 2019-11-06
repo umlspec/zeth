@@ -20,11 +20,10 @@ def get_zksnark_files(zksnark):
     if zksnark == constants.PGHR13_ZKSNARK:
         return (
             constants.PGHR13_VERIFIER_CONTRACT, constants.PGHR13_MIXER_CONTRACT)
-    elif zksnark == constants.GROTH16_ZKSNARK:
+    if zksnark == constants.GROTH16_ZKSNARK:
         return (
             constants.GROTH16_VERIFIER_CONTRACT, constants.GROTH16_MIXER_CONTRACT)
-    else:
-        return sys.exit(errors.SNARK_NOT_SUPPORTED)
+    return sys.exit(errors.SNARK_NOT_SUPPORTED)
 
 
 def compile_contracts(zksnark):
@@ -342,7 +341,7 @@ def mix(
             wei_pub_value,
             call_gas
         )
-    elif zksnark == constants.GROTH16_ZKSNARK:
+    if zksnark == constants.GROTH16_ZKSNARK:
         return mix_groth16(
             mixer_instance,
             pk_sender,
@@ -355,11 +354,10 @@ def mix(
             wei_pub_value,
             call_gas
         )
-    else:
-        return sys.exit(errors.SNARK_NOT_SUPPORTED)
+    return sys.exit(errors.SNARK_NOT_SUPPORTED)
 
 
-def parse_mix_call(mixer_instance, tx_receipt):
+def parse_mix_call(mixer_instance, _):
     """
     Get the logs data associated with this mixing
     """

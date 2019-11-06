@@ -27,14 +27,14 @@ level_2 = 1409940597479829628908920714458082748808636723248519385546133577757008
 if __name__ == "__main__":
 
     # MiMC contract unit test
-    hash = contracts.mimcHash(
+    digest = contracts.mimcHash(
         mimc_instance,
         x.to_bytes(32, byteorder="big"),
         y.to_bytes(32, byteorder="big"),
         b'clearmatics_mt_seed')
 
-    assert int.from_bytes(hash, byteorder="big") == out
-    "Hash is NOT correct"
+    assert int.from_bytes(digest, byteorder="big") == out, \
+        "Hash is NOT correct"
 
     # MerkleTreeMiMCHash of depth 3 unit test
 
@@ -44,25 +44,25 @@ if __name__ == "__main__":
 
     # Leaves
     for i in range(7, 15):
-        assert int.from_bytes(tree[i], byteorder="big") == 0
-        "MerkleTree Error Leaves"
+        assert int.from_bytes(tree[i], byteorder="big") == 0, \
+            "MerkleTree Error Leaves"
 
     # Level 2
     for i in range(3, 7):
-        assert int.from_bytes(tree[i], byteorder="big") == level_2
-        "MerkleTree Error Level 2"
+        assert int.from_bytes(tree[i], byteorder="big") == level_2, \
+            "MerkleTree Error Level 2"
 
     # Level 1
     for i in range(1, 3):
-        assert int.from_bytes(tree[i], byteorder="big") == level_1
-        "MerkleTree Error Level 1"
+        assert int.from_bytes(tree[i], byteorder="big") == level_1, \
+            "MerkleTree Error Level 1"
 
     # Root
-    assert int.from_bytes(tree[0], byteorder="big") == root
-    "MerkleTree Error Root"
+    assert int.from_bytes(tree[0], byteorder="big") == root, \
+        "MerkleTree Error Root"
 
     # Recovered root
-    assert int.from_bytes(recovered_root, byteorder="big") == root
-    "MerkleTree Error Computed Root"
+    assert int.from_bytes(recovered_root, byteorder="big") == root, \
+        "MerkleTree Error Computed Root"
 
     print("All test passed")

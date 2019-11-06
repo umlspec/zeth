@@ -1,0 +1,19 @@
+[MESSAGES CONTROL]
+disable=
+    line-too-long,
+    bad-continuation,
+    too-many-arguments,
+    missing-class-docstring,
+    missing-function-docstring,
+    too-many-locals,
+    too-many-statements,
+    invalid-name,
+    wrong-import-order,
+    missing-module-docstring,
+    broad-except,
+    no-member,
+    too-many-function-args,
+    duplicate-code,
+
+[REPORTS]
+output-format=text

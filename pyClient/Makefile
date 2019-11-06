@@ -31,6 +31,7 @@ grpc: $(PROTOBUF_OUTPUT)
 syntax: ${PROTOBUF_OUTPUT}
 	flake8 `git ls-files '**.py'`
 	mypy `git ls-files 'test/**.py' 'test_commands/**.py' 'zeth/**.py'`
+	pylint zeth test test_commands
 
 test: ${PROTOBUF_OUTPUT}
 	python -m unittest

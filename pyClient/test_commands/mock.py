@@ -71,7 +71,7 @@ def get_dummy_merkle_path(length):
     mkPath = []
     # Arbitrary sha256 digest used to build the dummy merkle path
     dummyNode = "6461f753bfe21ba2219ced74875b8dbd8c114c3c79d7e41306dd82118de1895b"
-    for i in range(length):
+    for _ in range(length):
         mkPath.append(dummyNode)
     return mkPath
 

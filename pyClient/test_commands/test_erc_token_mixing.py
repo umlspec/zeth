@@ -57,7 +57,7 @@ def get_merkle_tree(mixer_instance):
     return mk_byte_tree
 
 
-def print_token_balances(bob, alice, charlie, mixer):
+def print_token_balances(token_instance, bob, alice, charlie, mixer):
     print("Alice's Token balance: {}".format(token_instance.functions.balanceOf(alice).call()))
     print("Bob's Token balance: {}".format(token_instance.functions.balanceOf(bob).call()))
     print("Charlie's Token balance: {}".format(token_instance.functions.balanceOf(charlie).call()))
@@ -76,7 +76,7 @@ def mint_token(token_instance, spender_address, deployer_address, token_amount):
     return token_instance.functions.mint(spender_address, w3.toWei(token_amount, 'ether')).transact({'from': deployer_address})
 
 
-if __name__ == '__main__':
+def main():
     zksnark = zeth.utils.parse_zksnark_arg()
 
     # Ethereum addresses
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     zeth.grpc.write_verification_key(vk, zksnark)
 
     print("[INFO] 3. VK written, deploying the smart contracts...")
-    token_interface = compile_token()
+    # token_interface = compile_token()
     (proof_verifier_interface, otsig_verifier_interface, mixer_interface) = \
         zeth.contracts.compile_contracts(zksnark)
     hasher_interface, _ = zeth.contracts.compile_util_contracts()
@@ -124,6 +124,7 @@ if __name__ == '__main__':
         scenario.BOB_DEPOSIT_ETH)
     print("- Initial balances: ")
     print_token_balances(
+        token_instance,
         bob_eth_address,
         alice_eth_address,
         charlie_eth_address,
@@ -169,7 +170,7 @@ if __name__ == '__main__':
         zksnark
     )
     cm_address_bob_to_bob1 = result_deposit_bob_to_bob[0]
-    cm_address_bob_to_bob2 = result_deposit_bob_to_bob[1]
+    # cm_address_bob_to_bob2 = result_deposit_bob_to_bob[1]
     new_merkle_root_bob_to_bob = result_deposit_bob_to_bob[2]
     pk_sender_bob_to_bob = result_deposit_bob_to_bob[3]
     ciphertext_bob_to_bob1 = result_deposit_bob_to_bob[4]
@@ -177,6 +178,7 @@ if __name__ == '__main__':
 
     print("- Balances after Bob's deposit: ")
     print_token_balances(
+        token_instance,
         bob_eth_address,
         alice_eth_address,
         charlie_eth_address,
@@ -229,7 +231,7 @@ if __name__ == '__main__':
     )
 
     # Bob -> Bob (Change)
-    cm_address_bob_to_charlie1 = result_transfer_bob_to_charlie[0]
+    # cm_address_bob_to_charlie1 = result_transfer_bob_to_charlie[0]
     # Bob -> Charlie (payment to Charlie)
     cm_address_bob_to_charlie2 = result_transfer_bob_to_charlie[1]
     new_merkle_root_bob_to_charlie = result_transfer_bob_to_charlie[2]
@@ -258,6 +260,7 @@ if __name__ == '__main__':
 
     print("- Balances after Bob's transfer to Charlie: ")
     print_token_balances(
+        token_instance,
         bob_eth_address,
         alice_eth_address,
         charlie_eth_address,
@@ -301,6 +304,7 @@ if __name__ == '__main__':
     new_merkle_root_charlie_withdrawal = result_charlie_withdrawal[2]
     print("- Balances after Charlie's withdrawal: ")
     print_token_balances(
+        token_instance,
         bob_eth_address,
         alice_eth_address,
         charlie_eth_address,
@@ -334,8 +338,13 @@ if __name__ == '__main__':
     assert(result_double_spending == ""), \
         "Charlie managed to withdraw the same note twice!"
     print_token_balances(
+        token_instance,
         bob_eth_address,
         alice_eth_address,
         charlie_eth_address,
         mixer_instance.address
     )
+
+
+if __name__ == '__main__':
+    main()

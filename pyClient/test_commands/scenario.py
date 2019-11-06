@@ -37,8 +37,8 @@ def bob_deposit(
     bob_apk = keystore["Bob"]["addr_pk"]["apk"]
     bob_ask = keystore["Bob"]["addr_sk"]["ask"]
     # Create the JoinSplit dummy inputs for the deposit
-    (input_note1, input_nullifier1, input_address1) = mock.get_dummy_input(bob_apk, bob_ask)
-    (input_note2, input_nullifier2, input_address2) = mock.get_dummy_input(bob_apk, bob_ask)
+    (input_note1, _input_nullifier1, input_address1) = mock.get_dummy_input(bob_apk, bob_ask)
+    (input_note2, _input_nullifier2, input_address2) = mock.get_dummy_input(bob_apk, bob_ask)
     dummy_mk_path = mock.get_dummy_merkle_path(mk_tree_depth)
 
     note1_value = zeth.utils.to_zeth_units(str(BOB_SPLIT_1_ETH), 'ether')
@@ -135,7 +135,7 @@ def bob_to_charlie(
     bob_ask = keystore["Bob"]["addr_sk"]["ask"]
 
     # Create the an additional dummy input for the JoinSplit
-    (input_note2, input_nullifier2, input_address2) = mock.get_dummy_input(
+    (input_note2, _input_nullifier2, input_address2) = mock.get_dummy_input(
         bob_apk, bob_ask)
     dummy_mk_path = mock.get_dummy_merkle_path(mk_tree_depth)
 
@@ -231,7 +231,7 @@ def charlie_withdraw(
     charlie_ask = keystore["Charlie"]["addr_sk"]["ask"]
 
     # Create the an additional dummy input for the JoinSplit
-    (input_note2, input_nullifier2, input_address2) = mock.get_dummy_input(
+    (input_note2, _input_nullifier2, input_address2) = mock.get_dummy_input(
         charlie_apk, charlie_ask)
     dummy_mk_path = mock.get_dummy_merkle_path(mk_tree_depth)
 
@@ -333,7 +333,7 @@ def charlie_double_withdraw(
     charlie_ask = keystore["Charlie"]["addr_sk"]["ask"]
 
     # Create the an additional dummy input for the JoinSplit
-    (input_note2, input_nullifier2, input_address2) = \
+    (input_note2, _input_nullifier2, input_address2) = \
         mock.get_dummy_input(charlie_apk, charlie_ask)
     dummy_mk_path = mock.get_dummy_merkle_path(mk_tree_depth)
 
