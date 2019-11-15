@@ -303,6 +303,7 @@ def mix_pghr13(
         parsed_proof: GenericProof,
         vk: JoinsplitPublicKey,
         sigma: int,
+        random_seed: bytes,
         sender_address: str,
         wei_pub_value: int,
         call_gas: int) -> MixResult:
@@ -321,6 +322,7 @@ def mix_pghr13(
         hex_to_int(parsed_proof["k"]),
         [[int(vk[0][0]), int(vk[0][1])], [int(vk[1][0]), int(vk[1][1])]],
         int(sigma),
+        random_seed,
         hex_to_int(parsed_proof["inputs"]),
         pk_sender,
         ciphertext1,
@@ -339,6 +341,7 @@ def mix_groth16(
         parsed_proof: GenericProof,
         vk: JoinsplitPublicKey,
         sigma: int,
+        random_seed: bytes,
         sender_address: str,
         wei_pub_value: int,
         call_gas: int) -> MixResult:
@@ -349,6 +352,7 @@ def mix_groth16(
         hex_to_int(parsed_proof["c"]),
         [[int(vk[0][0]), int(vk[0][1])], [int(vk[1][0]), int(vk[1][1])]],
         int(sigma),
+        random_seed,
         hex_to_int(parsed_proof["inputs"]),
         pk_sender,
         ciphertext1,
@@ -367,6 +371,7 @@ def mix(
         parsed_proof: GenericProof,
         vk: JoinsplitPublicKey,
         sigma: int,
+        random_seed: bytes,
         sender_address: str,
         wei_pub_value: int,
         call_gas: int,
@@ -380,6 +385,7 @@ def mix(
             parsed_proof,
             vk,
             sigma,
+            random_seed,
             sender_address,
             wei_pub_value,
             call_gas
@@ -393,6 +399,7 @@ def mix(
             parsed_proof,
             vk,
             sigma,
+            random_seed,
             sender_address,
             wei_pub_value,
             call_gas

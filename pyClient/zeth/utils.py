@@ -233,7 +233,7 @@ def encode_to_hash(message_list: Any) -> bytes:
 
         # Convert it into a hex
         if isinstance(m, int):
-            m_hex = "{0:0>4X}".format(m)
+            m_hex = "{0:0>64X}".format(m)
         elif isinstance(m, str) and (m[1] == "x"):
             m_hex = m[2:]
 

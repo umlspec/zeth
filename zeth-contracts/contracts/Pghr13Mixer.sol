@@ -28,13 +28,14 @@ contract Pghr13Mixer is BaseMixer {
         uint[2] memory k,
         uint[2][2] memory vk,
         uint sigma,
+        bytes32 random_seed,
         uint[] memory input,
         bytes32 pk_sender,
         bytes memory ciphertext0,
         bytes memory ciphertext1 // Nb of ciphertexts depends on the JS description (Here 2 inputs)
         ) public payable {
-        // 1. Check the root and the nullifiers
-        assemble_root_and_nullifiers_and_append_to_state(input);
+        // 1. Check the root and the nullifiers and vk
+        assemble_and_check_root_nullifiers_and_vk_and_append_to_state(random_seed, vk, input);(random_seed, vk, input);
 
         // 2.a Verify the proof
         require(
