@@ -92,9 +92,14 @@ def bob_deposit(
     encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
     hash_inputs = sha256(encoded_inputs).hexdigest()
 
+    # Encode and hash the signature inputs
+    encoded_inputs = encode_to_hash(joinsplit_keypair.vk)
+    encoded_inputs += random_seed
+    hash_signature = sha256(encoded_inputs).hexdigest()
+
     # Compute the joinSplit signature
     joinsplit_sig = joinsplit.sign(
-        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs)
+        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs, hash_signature)
 
     return contracts.mix(
         mixer_instance,
@@ -184,9 +189,14 @@ def bob_to_charlie(
     encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
     hash_inputs = sha256(encoded_inputs).hexdigest()
 
+    # Encode and hash the signature inputs
+    encoded_inputs = encode_to_hash(joinsplit_keypair.vk)
+    encoded_inputs += random_seed
+    hash_signature = sha256(encoded_inputs).hexdigest()
+
     # Compute the joinSplit signature
     joinsplit_sig = joinsplit.sign(
-        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs)
+        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs, hash_signature)
 
     return contracts.mix(
         mixer_instance,
@@ -275,9 +285,14 @@ def charlie_withdraw(
     encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
     hash_inputs = sha256(encoded_inputs).hexdigest()
 
+    # Encode and hash the signature inputs
+    encoded_inputs = encode_to_hash(joinsplit_keypair.vk)
+    encoded_inputs += random_seed
+    hash_signature = sha256(encoded_inputs).hexdigest()
+
     # Compute the joinSplit signature
     joinsplit_sig = joinsplit.sign(
-        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs)
+        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs, hash_signature)
 
     return contracts.mix(
         mixer_instance,
@@ -388,9 +403,14 @@ def charlie_double_withdraw(
     encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
     hash_inputs = sha256(encoded_inputs).hexdigest()
 
+    # Encode and hash the signature inputs
+    encoded_inputs = encode_to_hash(joinsplit_keypair.vk)
+    encoded_inputs += random_seed
+    hash_signature = sha256(encoded_inputs).hexdigest()
+
     # Compute the joinSplit signature
     joinsplit_sig = joinsplit.sign(
-        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs)
+        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs, hash_signature)
 
     return contracts.mix(
         mixer_instance,
@@ -496,9 +516,14 @@ def charlie_corrupt_bob_deposit(
     encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
     hash_inputs = sha256(encoded_inputs).hexdigest()
 
+    # Encode and hash the signature inputs
+    encoded_inputs = encode_to_hash(joinsplit_keypair.vk)
+    encoded_inputs += random_seed
+    hash_signature = sha256(encoded_inputs).hexdigest()
+
     # Compute the joinSplit signature
     joinsplit_sig = joinsplit.sign(
-        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs)
+        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs, hash_signature)
 
     # ### ATTACK BLOCK
     # Charlie intercept Bob's deposit, corrupt it and
@@ -547,9 +572,19 @@ def charlie_corrupt_bob_deposit(
 
     # Compute new joinSplit key pair
     new_joinsplit_keypair = joinsplit.gen_one_time_schnorr_vk_sk_pair()
+
+    # Encode and hash the signature inputs
+    encoded_inputs = encode_to_hash(new_joinsplit_keypair.vk)
+    encoded_inputs += random_seed
+    hash_signature = sha256(encoded_inputs).hexdigest()
+
     # Compute the joinSplit signature
     new_joinsplit_sig = joinsplit.sign(
-        new_joinsplit_keypair, hash_fake_ciphers, hash_proof, hash_inputs)
+        new_joinsplit_keypair,
+        hash_fake_ciphers,
+        hash_proof,
+        hash_inputs,
+        hash_signature)
 
     result_corrupt2 = None
     try:

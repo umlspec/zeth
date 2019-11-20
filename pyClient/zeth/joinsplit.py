@@ -326,7 +326,8 @@ def sign(
         keypair: JoinsplitKeypair,
         hash_ciphers: str,
         hash_proof: str,
-        hash_inputs: str) -> int:
+        hash_inputs: str,
+        hash_signature: str) -> int:
     """
     Generate a Schnorr one-time signature of the ciphertexts, proofs and
     primary inputs We chose to sign the hash of the proof for modularity (to
@@ -343,13 +344,14 @@ def sign(
 
     # Encode and hash the verifying key and input hashes
     data_to_sign = encode_abi(
-        ["bytes32", "bytes32", "bytes32", "bytes32", "bytes32"],
+        ["bytes32", "bytes32", "bytes32", "bytes32", "bytes32", "bytes32"],
         [
             bytes.fromhex(y0_hex),
             bytes.fromhex(y1_hex),
             bytes.fromhex(hash_ciphers),
             bytes.fromhex(hash_proof),
-            bytes.fromhex(hash_inputs)
+            bytes.fromhex(hash_inputs),
+            bytes.fromhex(hash_signature)
         ]
     )
     data_hex = sha256(data_to_sign).hexdigest()
