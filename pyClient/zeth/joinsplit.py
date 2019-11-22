@@ -324,9 +324,6 @@ def field_elements_to_hex(longfield: str, shortfield: str) -> str:
 
 def sign(
         keypair: JoinsplitKeypair,
-        hash_ciphers: str,
-        hash_proof: str,
-        hash_inputs: str,
         hash_signature: str) -> int:
     """
     Generate a Schnorr one-time signature of the ciphertexts, proofs and
@@ -344,13 +341,10 @@ def sign(
 
     # Encode and hash the verifying key and input hashes
     data_to_sign = encode_abi(
-        ["bytes32", "bytes32", "bytes32", "bytes32", "bytes32", "bytes32"],
+        ["bytes32", "bytes32", "bytes32"],
         [
             bytes.fromhex(y0_hex),
             bytes.fromhex(y1_hex),
-            bytes.fromhex(hash_ciphers),
-            bytes.fromhex(hash_proof),
-            bytes.fromhex(hash_inputs),
             bytes.fromhex(hash_signature)
         ]
     )
@@ -464,7 +458,7 @@ def compute_joinsplit2x2_inputs(
         output_note_value1: str,
         public_in_value: str,
         public_out_value: str,
-        joinsplit_vk: JoinsplitPublicKey) -> Tuple[prover_pb2.ProofInputs, bytes]:
+        joinsplit_vk: JoinsplitPublicKey) -> prover_pb2.ProofInputs:
     """
     Create a ProofInput object for joinsplit parameters
     """
@@ -477,9 +471,7 @@ def compute_joinsplit2x2_inputs(
             mk_path1, input_address1, input_note1, sender_ask, input_nullifier1)
     ]
 
-    random_seed = _signature_randomness()
     h_sig = _compute_h_sig(
-        random_seed,
         input_nullifier0,
         input_nullifier1,
         joinsplit_vk)
@@ -499,15 +491,14 @@ def compute_joinsplit2x2_inputs(
         output_note1
     ]
 
-    return (prover_pb2.ProofInputs(
+    return prover_pb2.ProofInputs(
         mk_root=mk_root,
         js_inputs=js_inputs,
         js_outputs=js_outputs,
         pub_in_value=public_in_value,
         pub_out_value=public_out_value,
         h_sig=h_sig,
-        phi=phi),
-        random_seed)
+        phi=phi)
 
 
 def compute_joinsplit2x2_inputs_attack_nf(
@@ -525,7 +516,7 @@ def compute_joinsplit2x2_inputs_attack_nf(
         output_note_value1: str,
         public_in_value: str,
         public_out_value: str,
-        joinsplit_vk: JoinsplitPublicKey) -> Tuple[prover_pb2.ProofInputs, bytes]:
+        joinsplit_vk: JoinsplitPublicKey) -> prover_pb2.ProofInputs:
     """
     Create a ProofInput object for joinsplit parameters
     """
@@ -566,9 +557,7 @@ def compute_joinsplit2x2_inputs_attack_nf(
     attack_nf1 = "{0:064x}".format(int(attack_nf1_bits[::-1], 2))
     # ### ATTACK BLOCK
 
-    random_seed = _signature_randomness()
     h_sig = _compute_h_sig(
-        random_seed,
         attack_nf0,
         attack_nf1,
         joinsplit_vk)
@@ -587,15 +576,14 @@ def compute_joinsplit2x2_inputs_attack_nf(
         output_note0,
         output_note1
     ]
-    return (prover_pb2.ProofInputs(
+    return prover_pb2.ProofInputs(
         mk_root=mk_root,
         js_inputs=js_inputs,
         js_outputs=js_outputs,
         pub_in_value=public_in_value,
         pub_out_value=public_out_value,
         h_sig=h_sig,
-        phi=phi),
-        random_seed)
+        phi=phi)
 
 
 def get_proof_joinsplit_2_by_2(
@@ -615,13 +603,13 @@ def get_proof_joinsplit_2_by_2(
         public_in_value: str,
         public_out_value: str,
         zksnark: str
-) -> Tuple[ZethNote, ZethNote, Dict[str, Any], JoinsplitKeypair, bytes]:
+) -> Tuple[ZethNote, ZethNote, Dict[str, Any], JoinsplitKeypair]:
     """
     Query the prover server to generate a proof for the given joinsplit
     parameters.
     """
     joinsplit_keypair = gen_one_time_schnorr_vk_sk_pair()
-    (proof_input, random_seed) = compute_joinsplit2x2_inputs(
+    proof_input = compute_joinsplit2x2_inputs(
         mk_root,
         input_note0,
         input_address0,
@@ -646,8 +634,7 @@ def get_proof_joinsplit_2_by_2(
         proof_input.js_outputs[0],  # pylint: disable=no-member
         proof_input.js_outputs[1],  # pylint: disable=no-member
         proof_json,
-        joinsplit_keypair,
-        random_seed)
+        joinsplit_keypair)
 
 
 def get_proof_joinsplit_2_by_2_attack_nf(
@@ -667,13 +654,13 @@ def get_proof_joinsplit_2_by_2_attack_nf(
         public_in_value: str,
         public_out_value: str,
         zksnark: str
-) -> Tuple[ZethNote, ZethNote, Dict[str, Any], JoinsplitKeypair, bytes]:
+) -> Tuple[ZethNote, ZethNote, Dict[str, Any], JoinsplitKeypair]:
     """
     Query the prover server to generate a proof for the given joinsplit
     parameters.
     """
     joinsplit_keypair = gen_one_time_schnorr_vk_sk_pair()
-    (proof_input, random_seed) = compute_joinsplit2x2_inputs_attack_nf(
+    proof_input = compute_joinsplit2x2_inputs_attack_nf(
         mk_root,
         input_note0,
         input_address0,
@@ -698,8 +685,7 @@ def get_proof_joinsplit_2_by_2_attack_nf(
         proof_input.js_outputs[0],  # pylint: disable=no-member
         proof_input.js_outputs[1],  # pylint: disable=no-member
         proof_json,
-        joinsplit_keypair,
-        random_seed)
+        joinsplit_keypair)
 
 
 def encrypt_notes(
@@ -741,7 +727,6 @@ def receive_notes(
 
 
 def _compute_h_sig(
-        random_seed: bytes,
         nf0: str,
         nf1: str,
         joinsplit_pub_key: JoinsplitPublicKey) -> str:
@@ -759,10 +744,9 @@ def _compute_h_sig(
 
     h_sig = sha256(
         encode_abi(
-            ['bytes32', 'bytes32', 'bytes32',
+            ['bytes32', 'bytes32',
              'bytes32', 'bytes32', 'bytes32', 'bytes32'],
             [
-                random_seed,
                 bytes.fromhex(nf0),
                 bytes.fromhex(nf1),
                 bytes.fromhex(vk_hex[0]),

@@ -112,7 +112,6 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
     // and modifies the state of the mixer contract accordingly
     // (ie: Appends the commitments to the tree, appends the nullifiers to the list and so on)
     function assemble_and_check_root_nullifiers_and_vk_and_append_to_state(
-        bytes32 random_seed,
         uint[2][2] memory vk,
         uint[] memory primary_inputs)
 
@@ -139,7 +138,7 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
 
         // 3. We re-compute h_sig, re-assemble the expected h_sig and check they are equal
         // (i.e. that h_sig re-assembled was correctly generated from vk)
-        bytes32 expected_hsig = sha256(abi.encodePacked(random_seed, nfs, vk));
+        bytes32 expected_hsig = sha256(abi.encodePacked(nfs, vk));
 
         digest_inputs[0] = primary_inputs[1 + 2 * (jsIn + jsOut) + 1 + 1];
         digest_inputs[1] = primary_inputs[1 + 2 * (jsIn + jsOut + 1) + 1];
@@ -150,7 +149,7 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
         );
     }
 
-    function assemble_primary_inputs_and_hash(uint[] memory primary_inputs) public returns (bytes32) {
+    function assemble_primary_inputs_and_encode(uint[] memory primary_inputs) public pure returns (bytes memory) {
         bytes32[1 + jsIn + jsOut + 1 + 1 + 1 + jsIn] memory formatted_inputs;
         uint256[] memory digest_inputs = new uint[](2);
 
@@ -196,9 +195,7 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
             formatted_inputs[(i-1)/2 + 2] = formatted;
         }
 
-        bytes32 hash_inputs = sha256(abi.encodePacked(formatted_inputs));
-
-        return hash_inputs;
+        return abi.encodePacked(formatted_inputs);
     }
 
 

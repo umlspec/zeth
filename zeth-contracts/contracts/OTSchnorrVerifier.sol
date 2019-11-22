@@ -21,19 +21,13 @@ contract OTSchnorrVerifier {
     function verify(
         uint[2][2] memory vk,
         uint sigma,
-        bytes32 hash_ciphers,
-        bytes32 hash_proof,
-        bytes32 hash_inputs,
-        bytes32 hash_signature
+        bytes32 hash_tobesigned
     ) public returns (bool) {
         bytes32 h_bytes = sha256(
             abi.encodePacked(
                 vk[1][0],
                 vk[1][1],
-                hash_ciphers,
-                hash_proof,
-                hash_inputs,
-                hash_signature
+                hash_tobesigned
             )
         );
         uint h = uint(h_bytes);

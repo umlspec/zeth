@@ -23,14 +23,13 @@ contract Groth16Mixer is BaseMixer {
         uint[2] memory c,
         uint[2][2] memory vk,
         uint sigma,
-        bytes32 random_seed,
         uint[] memory input,
         bytes32 pk_sender,
         bytes memory ciphertext0,
         bytes memory ciphertext1 // The nb of ciphertexts depends on the JS description (Here 2 inputs)
     ) public payable {
         // 1. Check the root and the nullifiers and vk
-        assemble_and_check_root_nullifiers_and_vk_and_append_to_state(random_seed, vk, input);
+        assemble_and_check_root_nullifiers_and_vk_and_append_to_state(vk, input);
 
         // 2.a Verify the proof
         require(
@@ -39,17 +38,24 @@ contract Groth16Mixer is BaseMixer {
         );
 
         // 2.b Verify the signature
-        bytes32 hash_proof = sha256(abi.encodePacked(a, b, c));
-        bytes32 hash_ciphers = sha256(abi.encodePacked(pk_sender, ciphertext0, ciphertext1));
-        bytes32 hash_signature = sha256(abi.encodePacked(vk, random_seed));
+        bytes32 hash_tobesigned = sha256(
+            abi.encodePacked(
+                abi.encodePacked(
+                    pk_sender,
+                    ciphertext0,
+                    ciphertext1,
+                    a,
+                    b,
+                    c),
+                assemble_primary_inputs_and_encode(input)
+            )
+        );
+
         require(
             otsig_verifier.verify(
                 vk,
                 sigma,
-                hash_ciphers,
-                hash_proof,
-                assemble_primary_inputs_and_hash(input),
-                hash_signature
+                hash_tobesigned
             ),
             "Invalid signature: Unable to verify the signature correctly"
         );

@@ -214,7 +214,6 @@ def string_list_flatten(
             else:
                 strs.append(cast(str, el))
         return strs
-
     return cast(List[str], strs_list)
 
 

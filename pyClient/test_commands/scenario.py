@@ -49,7 +49,7 @@ def bob_deposit(
     note2_value = to_zeth_units(str(BOB_SPLIT_2_ETH), 'ether')
     v_in = to_zeth_units(str(BOB_DEPOSIT_ETH), 'ether')
 
-    (output_note1, output_note2, proof_json, joinsplit_keypair, random_seed) = \
+    (output_note1, output_note2, proof_json, joinsplit_keypair) = \
         joinsplit.get_proof_joinsplit_2_by_2(
             prover_client,
             mk_root,
@@ -77,29 +77,26 @@ def bob_deposit(
         (output_note1, pk_bob),
         (output_note2, pk_bob)])
 
-    # Hash the pk_sender and cipher-texts
-    ciphers = pk_sender + ciphertexts[0] + ciphertexts[1]
-    hash_ciphers = sha256(ciphers).hexdigest()
+    # Hashing all inputs of the signature
+    # Encode the ciphertexts and ephemeral encryption key
+    data_to_be_signed = pk_sender + ciphertexts[0] + ciphertexts[1]
 
-    # Hash the proof
+    # Encode the proof
     proof: List[str] = []
     for key in proof_json.keys():
         if key != "inputs":
             proof.extend(proof_json[key])
-    hash_proof = sha256(encode_to_hash(proof)).hexdigest()
+    data_to_be_signed += encode_to_hash(proof)
 
-    # Encode and hash the primary inputs
+    # Encode the primary inputs
     encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
-    hash_inputs = sha256(encoded_inputs).hexdigest()
+    data_to_be_signed += encoded_inputs
 
-    # Encode and hash the signature inputs
-    encoded_inputs = encode_to_hash(joinsplit_keypair.vk)
-    encoded_inputs += random_seed
-    hash_signature = sha256(encoded_inputs).hexdigest()
+    # Hash data_to_be_sign
+    hash_tobesign = sha256(data_to_be_signed).hexdigest()
 
     # Compute the joinSplit signature
-    joinsplit_sig = joinsplit.sign(
-        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs, hash_signature)
+    joinsplit_sig = joinsplit.sign(joinsplit_keypair, hash_tobesign)
 
     return contracts.mix(
         mixer_instance,
@@ -109,7 +106,6 @@ def bob_deposit(
         proof_json,
         joinsplit_keypair.vk,
         joinsplit_sig,
-        random_seed,
         bob_eth_address,
         W3.toWei(BOB_DEPOSIT_ETH, 'ether'),
         4000000,
@@ -147,7 +143,7 @@ def bob_to_charlie(
     note1_value = to_zeth_units(str(BOB_TO_CHARLIE_ETH), 'ether')
     note2_value = to_zeth_units(str(BOB_TO_CHARLIE_CHANGE_ETH), 'ether')
 
-    (output_note1, output_note2, proof_json, joinsplit_keypair, random_seed) = \
+    (output_note1, output_note2, proof_json, joinsplit_keypair) = \
         joinsplit.get_proof_joinsplit_2_by_2(
             prover_client,
             mk_root,
@@ -174,29 +170,26 @@ def bob_to_charlie(
         (output_note2,
          get_public_key_from_bytes(keystore["Charlie"].addr_pk.enc_pk))])
 
-    # Hash the pk_sender and cipher-texts
-    ciphers = pk_sender + ciphertexts[0] + ciphertexts[1]
-    hash_ciphers = sha256(ciphers).hexdigest()
+    # Hashing all inputs of the signature
+    # Encode the ciphertexts and ephemeral encryption key
+    data_to_be_signed = pk_sender + ciphertexts[0] + ciphertexts[1]
 
-    # Hash the proof
-    proof: List[int] = []
+    # Encode the proof
+    proof: List[str] = []
     for key in proof_json.keys():
         if key != "inputs":
             proof.extend(proof_json[key])
-    hash_proof = sha256(encode_to_hash(proof)).hexdigest()
+    data_to_be_signed += encode_to_hash(proof)
 
-    # Encode and hash the primary inputs
+    # Encode the primary inputs
     encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
-    hash_inputs = sha256(encoded_inputs).hexdigest()
+    data_to_be_signed += encoded_inputs
 
-    # Encode and hash the signature inputs
-    encoded_inputs = encode_to_hash(joinsplit_keypair.vk)
-    encoded_inputs += random_seed
-    hash_signature = sha256(encoded_inputs).hexdigest()
+    # Hash data_to_be_sign
+    hash_tobesign = sha256(data_to_be_signed).hexdigest()
 
     # Compute the joinSplit signature
-    joinsplit_sig = joinsplit.sign(
-        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs, hash_signature)
+    joinsplit_sig = joinsplit.sign(joinsplit_keypair, hash_tobesign)
 
     return contracts.mix(
         mixer_instance,
@@ -206,7 +199,6 @@ def bob_to_charlie(
         proof_json,
         joinsplit_keypair.vk,
         joinsplit_sig,
-        random_seed,
         bob_eth_address,
         # Pay an arbitrary amount (1 wei here) that will be refunded since the
         # `mix` function is payable
@@ -242,7 +234,7 @@ def charlie_withdraw(
     note1_value = to_zeth_units(str(CHARLIE_WITHDRAW_CHANGE_ETH), 'ether')
     v_out = to_zeth_units(str(CHARLIE_WITHDRAW_ETH), 'ether')
 
-    (output_note1, output_note2, proof_json, joinsplit_keypair, random_seed) = \
+    (output_note1, output_note2, proof_json, joinsplit_keypair) = \
         joinsplit.get_proof_joinsplit_2_by_2(
             prover_client,
             mk_root,
@@ -270,29 +262,26 @@ def charlie_withdraw(
         (output_note1, pk_charlie),
         (output_note2, pk_charlie)])
 
-    # Hash the pk_sender and cipher-texts
-    ciphers = pk_sender + ciphertexts[0] + ciphertexts[1]
-    hash_ciphers = sha256(ciphers).hexdigest()
+    # Hashing all inputs of the signature
+    # Encode the ciphertexts and ephemeral encryption key
+    data_to_be_signed = pk_sender + ciphertexts[0] + ciphertexts[1]
 
-    # Hash the proof
+    # Encode the proof
     proof: List[str] = []
     for key in proof_json.keys():
         if key != "inputs":
             proof.extend(proof_json[key])
-    hash_proof = sha256(encode_to_hash(proof)).hexdigest()
+    data_to_be_signed += encode_to_hash(proof)
 
-    # Encode and hash the primary inputs
+    # Encode the primary inputs
     encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
-    hash_inputs = sha256(encoded_inputs).hexdigest()
+    data_to_be_signed += encoded_inputs
 
-    # Encode and hash the signature inputs
-    encoded_inputs = encode_to_hash(joinsplit_keypair.vk)
-    encoded_inputs += random_seed
-    hash_signature = sha256(encoded_inputs).hexdigest()
+    # Hash data_to_be_sign
+    hash_tobesign = sha256(data_to_be_signed).hexdigest()
 
     # Compute the joinSplit signature
-    joinsplit_sig = joinsplit.sign(
-        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs, hash_signature)
+    joinsplit_sig = joinsplit.sign(joinsplit_keypair, hash_tobesign)
 
     return contracts.mix(
         mixer_instance,
@@ -302,7 +291,6 @@ def charlie_withdraw(
         proof_json,
         joinsplit_keypair.vk,
         joinsplit_sig,
-        random_seed,
         charlie_eth_address,
         # Pay an arbitrary amount (1 wei here) that will be refunded since the
         # `mix` function is payable
@@ -350,7 +338,7 @@ def charlie_double_withdraw(
     # See: https://github.com/clearmatics/zeth/issues/38
 
     # We make sure that h_sig is computed with the malicious nfs
-    (output_note1, output_note2, proof_json, joinsplit_keypair, random_seed) = \
+    (output_note1, output_note2, proof_json, joinsplit_keypair) = \
         joinsplit.get_proof_joinsplit_2_by_2_attack_nf(
             prover_client,
             mk_root,
@@ -388,29 +376,26 @@ def charlie_double_withdraw(
         (output_note1, pk_charlie),
         (output_note2, pk_charlie)])
 
-    # Hash the pk_sender and cipher-texts
-    ciphers = pk_sender + ciphertexts[0] + ciphertexts[1]
-    hash_ciphers = sha256(ciphers).hexdigest()
+    # Hashing all inputs of the signature
+    # Encode the ciphertexts and ephemeral encryption key
+    data_to_be_signed = pk_sender + ciphertexts[0] + ciphertexts[1]
 
-    # Hash the proof
+    # Encode the proof
     proof: List[str] = []
     for key in proof_json.keys():
         if key != "inputs":
             proof.extend(proof_json[key])
-    hash_proof = sha256(encode_to_hash(proof)).hexdigest()
+    data_to_be_signed += encode_to_hash(proof)
 
-    # Encode and hash the primary inputs
+    # Encode the primary inputs
     encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
-    hash_inputs = sha256(encoded_inputs).hexdigest()
+    data_to_be_signed += encoded_inputs
 
-    # Encode and hash the signature inputs
-    encoded_inputs = encode_to_hash(joinsplit_keypair.vk)
-    encoded_inputs += random_seed
-    hash_signature = sha256(encoded_inputs).hexdigest()
+    # Hash data_to_be_sign
+    hash_tobesign = sha256(data_to_be_signed).hexdigest()
 
     # Compute the joinSplit signature
-    joinsplit_sig = joinsplit.sign(
-        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs, hash_signature)
+    joinsplit_sig = joinsplit.sign(joinsplit_keypair, hash_tobesign)
 
     return contracts.mix(
         mixer_instance,
@@ -420,7 +405,6 @@ def charlie_double_withdraw(
         proof_json,
         joinsplit_keypair.vk,
         joinsplit_sig,
-        random_seed,
         charlie_eth_address,
         # Pay an arbitrary amount (1 wei here) that will be refunded since the
         # `mix` function is payable
@@ -473,7 +457,7 @@ def charlie_corrupt_bob_deposit(
     note2_value = to_zeth_units(str(BOB_SPLIT_2_ETH), 'ether')
     v_in = to_zeth_units(str(BOB_DEPOSIT_ETH), 'ether')
 
-    (output_note1, output_note2, proof_json, joinsplit_keypair, random_seed) = \
+    (output_note1, output_note2, proof_json, joinsplit_keypair) = \
         joinsplit.get_proof_joinsplit_2_by_2(
             prover_client,
             mk_root,
@@ -501,29 +485,26 @@ def charlie_corrupt_bob_deposit(
         (output_note1, pk_bob),
         (output_note2, pk_bob)])
 
-    # Hash the pk_sender and cipher-texts
-    ciphers = pk_sender + ciphertexts[0] + ciphertexts[1]
-    hash_ciphers = sha256(ciphers).hexdigest()
+    # Hashing all inputs of the signature
+    # Encode the ciphertexts and ephemeral encryption key
+    data_to_be_signed = pk_sender + ciphertexts[0] + ciphertexts[1]
 
-    # Hash the proof
+    # Encode the proof
     proof: List[str] = []
     for key in proof_json.keys():
         if key != "inputs":
             proof.extend(proof_json[key])
-    hash_proof = sha256(encode_to_hash(proof)).hexdigest()
+    data_to_be_signed += encode_to_hash(proof)
 
-    # Encode and hash the primary inputs
+    # Encode the primary inputs
     encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
-    hash_inputs = sha256(encoded_inputs).hexdigest()
+    data_to_be_signed += encoded_inputs
 
-    # Encode and hash the signature inputs
-    encoded_inputs = encode_to_hash(joinsplit_keypair.vk)
-    encoded_inputs += random_seed
-    hash_signature = sha256(encoded_inputs).hexdigest()
+    # Hash data_to_be_sign
+    hash_tobesign = sha256(data_to_be_signed).hexdigest()
 
     # Compute the joinSplit signature
-    joinsplit_sig = joinsplit.sign(
-        joinsplit_keypair, hash_ciphers, hash_proof, hash_inputs, hash_signature)
+    joinsplit_sig = joinsplit.sign(joinsplit_keypair, hash_tobesign)
 
     # ### ATTACK BLOCK
     # Charlie intercept Bob's deposit, corrupt it and
@@ -545,7 +526,6 @@ def charlie_corrupt_bob_deposit(
             proof_json,
             joinsplit_keypair.vk,
             joinsplit_sig,
-            random_seed,
             charlie_eth_address,
             # Pay an arbitrary amount (1 wei here) that will be refunded
             #  since the `mix` function is payable
@@ -566,25 +546,26 @@ def charlie_corrupt_bob_deposit(
     # Corrupt the cipher-texts
     fake_ciphertext0 = urandom(32)
     fake_ciphertext1 = urandom(32)
-    # Hash the pk_sender and cipher-texts
-    fake_ciphers = pk_sender + fake_ciphertext0 + fake_ciphertext1
-    hash_fake_ciphers = sha256(fake_ciphers).hexdigest()
+
+    # Hashing all inputs of the signature
+    # Encode the ciphertexts and ephemeral encryption key
+    data_to_be_signed = pk_sender + fake_ciphertext0 + fake_ciphertext1
+
+    # Encode the proof
+    data_to_be_signed += encode_to_hash(proof)
+
+    # Encode the primary inputs
+    encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
+    data_to_be_signed += encoded_inputs
+
+    # Hash data_to_be_sign
+    hash_tobesign = sha256(data_to_be_signed).hexdigest()
 
     # Compute new joinSplit key pair
     new_joinsplit_keypair = joinsplit.gen_one_time_schnorr_vk_sk_pair()
 
-    # Encode and hash the signature inputs
-    encoded_inputs = encode_to_hash(new_joinsplit_keypair.vk)
-    encoded_inputs += random_seed
-    hash_signature = sha256(encoded_inputs).hexdigest()
-
     # Compute the joinSplit signature
-    new_joinsplit_sig = joinsplit.sign(
-        new_joinsplit_keypair,
-        hash_fake_ciphers,
-        hash_proof,
-        hash_inputs,
-        hash_signature)
+    new_joinsplit_sig = joinsplit.sign(new_joinsplit_keypair, hash_tobesign)
 
     result_corrupt2 = None
     try:
@@ -596,7 +577,6 @@ def charlie_corrupt_bob_deposit(
             proof_json,
             new_joinsplit_keypair.vk,
             new_joinsplit_sig,
-            random_seed,
             charlie_eth_address,
             # Pay an arbitrary amount (1 wei here) that will be refunded since the
             # `mix` function is payable
@@ -623,7 +603,6 @@ def charlie_corrupt_bob_deposit(
         proof_json,
         joinsplit_keypair.vk,
         joinsplit_sig,
-        random_seed,
         bob_eth_address,
         W3.toWei(BOB_DEPOSIT_ETH, 'ether'),
         4000000,
