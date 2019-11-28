@@ -89,7 +89,7 @@ def bob_deposit(
     data_to_be_signed += encode_to_hash(proof)
 
     # Encode the primary inputs
-    encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
+    encoded_inputs = encode_to_hash(proof_json["inputs"])
     data_to_be_signed += encoded_inputs
 
     # Hash data_to_be_sign
@@ -182,7 +182,7 @@ def bob_to_charlie(
     data_to_be_signed += encode_to_hash(proof)
 
     # Encode the primary inputs
-    encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
+    encoded_inputs = encode_to_hash(proof_json["inputs"])
     data_to_be_signed += encoded_inputs
 
     # Hash data_to_be_sign
@@ -274,7 +274,7 @@ def charlie_withdraw(
     data_to_be_signed += encode_to_hash(proof)
 
     # Encode the primary inputs
-    encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
+    encoded_inputs = encode_to_hash(proof_json["inputs"])
     data_to_be_signed += encoded_inputs
 
     # Hash data_to_be_sign
@@ -388,7 +388,7 @@ def charlie_double_withdraw(
     data_to_be_signed += encode_to_hash(proof)
 
     # Encode the primary inputs
-    encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
+    encoded_inputs = encode_to_hash(proof_json["inputs"])
     data_to_be_signed += encoded_inputs
 
     # Hash data_to_be_sign
@@ -497,7 +497,7 @@ def charlie_corrupt_bob_deposit(
     data_to_be_signed += encode_to_hash(proof)
 
     # Encode the primary inputs
-    encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
+    encoded_inputs = encode_to_hash(proof_json["inputs"])
     data_to_be_signed += encoded_inputs
 
     # Hash data_to_be_sign
@@ -555,7 +555,7 @@ def charlie_corrupt_bob_deposit(
     data_to_be_signed += encode_to_hash(proof)
 
     # Encode the primary inputs
-    encoded_inputs = joinsplit.encode_pub_input_to_hash(proof_json["inputs"])
+    encoded_inputs = encode_to_hash(proof_json["inputs"])
     data_to_be_signed += encoded_inputs
 
     # Hash data_to_be_sign

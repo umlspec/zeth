@@ -149,56 +149,6 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
         );
     }
 
-    function assemble_primary_inputs_and_encode(uint[] memory primary_inputs) public pure returns (bytes memory) {
-        bytes32[1 + jsIn + jsOut + 1 + 1 + 1 + jsIn] memory formatted_inputs;
-        uint256[] memory digest_inputs = new uint[](2);
-
-        //Format and append the root
-        bytes32 formatted = bytes32(primary_inputs[0]);
-        formatted_inputs[0] = formatted;
-
-        //Format and append the nullifiers
-        for(uint i = 1; i < 1 + 2 * (jsIn); i += 2) {
-            digest_inputs[0] = primary_inputs[i];
-            digest_inputs[1] = primary_inputs[i+1];
-            formatted = Bytes.sha256_digest_from_field_elements(digest_inputs);
-            formatted_inputs[(i-1)/2 + 1] = formatted;
-        }
-
-        //Format and append the commitments
-        for(uint i = 1 + 2 * (jsIn); i < 1 + 2 * (jsIn + jsOut); i += 2) {
-            digest_inputs[0] = primary_inputs[i];
-            digest_inputs[1] = primary_inputs[i+1];
-            formatted = Bytes.sha256_digest_from_field_elements(digest_inputs);
-            formatted_inputs[(i-1)/2 + 1] = formatted;
-        }
-
-        //Format and append the v_pub_in
-        formatted = bytes32(primary_inputs[1 + 2 * (jsIn + jsOut)]);
-        formatted_inputs[1 + jsIn + jsOut] = formatted;
-
-        //Format and append the v_pub_out
-        formatted = bytes32(primary_inputs[1 + 2 * (jsIn + jsOut) + 1]);
-        formatted_inputs[1 + jsIn + jsOut + 1] = formatted;
-
-        //Format and append h_sig
-        digest_inputs[0] = primary_inputs[1 + 2 * (jsIn + jsOut) + 1 + 1];
-        digest_inputs[1] = primary_inputs[1 + 2 * (jsIn + jsOut + 1) + 1];
-        formatted = Bytes.sha256_digest_from_field_elements(digest_inputs);
-        formatted_inputs[1 + jsIn + jsOut + 1 + 1] = formatted;
-
-        //Format and append the h_iS
-        for(uint i = 1 + 2 * (jsIn + jsOut + 1) + 1 + 1; i < 1 + 2 * (jsIn + jsOut + 1 + jsIn) + 1 + 1; i += 2) {
-            digest_inputs[0] = primary_inputs[i];
-            digest_inputs[1] = primary_inputs[i+1];
-            formatted = Bytes.sha256_digest_from_field_elements(digest_inputs);
-            formatted_inputs[(i-1)/2 + 2] = formatted;
-        }
-
-        return abi.encodePacked(formatted_inputs);
-    }
-
-
     function assemble_commitments_and_append_to_state(uint[] memory primary_inputs) internal {
         // We re-assemble the commitments (JSOutputs)
         uint256[] memory digest_inputs = new uint[](2);
