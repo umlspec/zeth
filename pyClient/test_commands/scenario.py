@@ -427,15 +427,15 @@ def charlie_corrupt_bob_deposit(
     Charlie tries to break transaction malleability and corrupt the coins
     bob is sending in a transaction
     She does so by intercepting bob's transaction and either:
-    - case 1: replacing the cipher-texts (or pk_sender) to garbage
-    - case 2: replacing the cipher-texts to garbage and using a new OT-signature
+    - case 1: replacing the ciphertexts (or pk_sender) to garbage
+    - case 2: replacing the ciphertexts to garbage and using a new OT-signature
     Both attacks should fail,
     - case 1: the signature check should fail, else Charlie broke UF-CMA
         of the OT signature
     - case 2: the h_sig/vk verification should fail, as h_sig is not a function
         of vk any longer
 
-    NB. If the adversary were to corrupt the cipher-texts (or the encryption key),
+    NB. If the adversary were to corrupt the ciphertexts (or the encryption key),
     replace the OT-signature by a new one and modify the h_sig accordingly so that
     the check on the signature verification (key h_sig/vk) passes, the proof would
     not verify, which is why we do not test this case.
@@ -510,8 +510,8 @@ def charlie_corrupt_bob_deposit(
     # Charlie intercept Bob's deposit, corrupt it and
     # send her transaction before Bob's transaction is accepted
 
-    # Case 1: replacing the cipher-texts to garbage
-    # Corrupt the cipher-texts
+    # Case 1: replacing the ciphertexts to garbage
+    # Corrupt the ciphertexts
     # (another way would have been to overwrite pk_sender)
     fake_ciphertext0 = urandom(32)
     fake_ciphertext1 = urandom(32)
@@ -542,8 +542,8 @@ def charlie_corrupt_bob_deposit(
         "Charlie managed to corrupt Bob's deposit the first time!"
     print("")
 
-    # Case 2: replacing the cipher-texts to garbage and using a new OT-signature
-    # Corrupt the cipher-texts
+    # Case 2: replacing the ciphertexts to garbage and using a new OT-signature
+    # Corrupt the ciphertexts
     fake_ciphertext0 = urandom(32)
     fake_ciphertext1 = urandom(32)
 
@@ -594,7 +594,7 @@ def charlie_corrupt_bob_deposit(
 
     # ### ATTACK BLOCK
 
-    # Bob transaction finally is received
+    # Bob transaction is finally mined
     return contracts.mix(
         mixer_instance,
         pk_sender,
