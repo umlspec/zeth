@@ -36,13 +36,13 @@ contract Pghr13Mixer is BaseMixer {
         // 1. Check the root and the nullifiers and vk
         assemble_and_check_root_nullifiers_and_vk_and_append_to_state(vk, input);
 
-        // 2.a Verify the proof
+        // 2.a Verify the proof and that the primary inputs are in the scalar field
         require(
             zksnark_verifier.verifyTx(a, a_p, b, b_p, c, c_p, h, k, input),
             "Invalid proof: Unable to verify the proof correctly"
         );
 
-        // 2.b Verify the signature
+        // 2.b Verify the signature on the hash of data_to_be_signed
         bytes32 hash_tobesigned = sha256(
             abi.encodePacked(
                 pk_sender,
