@@ -234,7 +234,8 @@ def encode_to_hash(message_list: Any) -> bytes:
 
         # Convert it into a hex
         if isinstance(m, (FQ, int)):
-            assert int(m) < 2**256, "Encode input as bytes32 longer than 256 bits"
+            assert int(m) < 2**256, "The input cannot be encoded as " + \
+                "a bytes32 (longer than 256 bits)"
 
             m_hex = "{0:0>64X}".format(int(m))
         elif isinstance(m, str) and (m[1] == "x"):

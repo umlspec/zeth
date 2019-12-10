@@ -1,12 +1,10 @@
 import zeth.joinsplit as joinsplit
 import zeth.contracts as contracts
 from zeth.prover_client import ProverClient
-from zeth.utils import to_zeth_units, int64_to_hex, get_public_key_from_bytes, \
-    encode_to_hash
+from zeth.utils import to_zeth_units, int64_to_hex, get_public_key_from_bytes
 import test_commands.mock as mock
 import api.util_pb2 as util_pb2
 
-from hashlib import sha256
 from web3 import Web3, HTTPProvider  # type: ignore
 from typing import List, Any
 from os import urandom
@@ -77,26 +75,13 @@ def bob_deposit(
         (output_note1, pk_bob),
         (output_note2, pk_bob)])
 
-    # Hashing all inputs of the signature
-    # Encode the ciphertexts and ephemeral encryption key
-    data_to_be_signed = pk_sender + ciphertexts[0] + ciphertexts[1]
-
-    # Encode the proof
-    proof: List[str] = []
-    for key in proof_json.keys():
-        if key != "inputs":
-            proof.extend(proof_json[key])
-    data_to_be_signed += encode_to_hash(proof)
-
-    # Encode the primary inputs
-    encoded_inputs = encode_to_hash(proof_json["inputs"])
-    data_to_be_signed += encoded_inputs
-
-    # Hash data_to_be_sign
-    hash_tobesign = sha256(data_to_be_signed).hexdigest()
-
-    # Compute the joinSplit signature
-    joinsplit_sig = joinsplit.sign(joinsplit_keypair, hash_tobesign)
+    # Signs the primary inputs, pk_sender and the ciphertexts
+    joinsplit_sig = joinsplit.sign_joinsplit(
+        joinsplit_keypair,
+        pk_sender,
+        ciphertexts,
+        proof_json
+    )
 
     return contracts.mix(
         mixer_instance,
@@ -170,26 +155,13 @@ def bob_to_charlie(
         (output_note2,
          get_public_key_from_bytes(keystore["Charlie"].addr_pk.enc_pk))])
 
-    # Hashing all inputs of the signature
-    # Encode the ciphertexts and ephemeral encryption key
-    data_to_be_signed = pk_sender + ciphertexts[0] + ciphertexts[1]
-
-    # Encode the proof
-    proof: List[str] = []
-    for key in proof_json.keys():
-        if key != "inputs":
-            proof.extend(proof_json[key])
-    data_to_be_signed += encode_to_hash(proof)
-
-    # Encode the primary inputs
-    encoded_inputs = encode_to_hash(proof_json["inputs"])
-    data_to_be_signed += encoded_inputs
-
-    # Hash data_to_be_sign
-    hash_tobesign = sha256(data_to_be_signed).hexdigest()
-
-    # Compute the joinSplit signature
-    joinsplit_sig = joinsplit.sign(joinsplit_keypair, hash_tobesign)
+    # Signs the primary inputs, pk_sender and the ciphertexts
+    joinsplit_sig = joinsplit.sign_joinsplit(
+        joinsplit_keypair,
+        pk_sender,
+        ciphertexts,
+        proof_json
+    )
 
     return contracts.mix(
         mixer_instance,
@@ -262,26 +234,13 @@ def charlie_withdraw(
         (output_note1, pk_charlie),
         (output_note2, pk_charlie)])
 
-    # Hashing all inputs of the signature
-    # Encode the ciphertexts and ephemeral encryption key
-    data_to_be_signed = pk_sender + ciphertexts[0] + ciphertexts[1]
-
-    # Encode the proof
-    proof: List[str] = []
-    for key in proof_json.keys():
-        if key != "inputs":
-            proof.extend(proof_json[key])
-    data_to_be_signed += encode_to_hash(proof)
-
-    # Encode the primary inputs
-    encoded_inputs = encode_to_hash(proof_json["inputs"])
-    data_to_be_signed += encoded_inputs
-
-    # Hash data_to_be_sign
-    hash_tobesign = sha256(data_to_be_signed).hexdigest()
-
-    # Compute the joinSplit signature
-    joinsplit_sig = joinsplit.sign(joinsplit_keypair, hash_tobesign)
+    # Signs the primary inputs, pk_sender and the ciphertexts
+    joinsplit_sig = joinsplit.sign_joinsplit(
+        joinsplit_keypair,
+        pk_sender,
+        ciphertexts,
+        proof_json
+    )
 
     return contracts.mix(
         mixer_instance,
@@ -368,34 +327,21 @@ def charlie_double_withdraw(
     proof_json["inputs"][4] = hex(int(proof_json["inputs"][4], 16) + r)
     # ### ATTACK BLOCK
 
-    # construct pk object from bytes
+    # Construct pk object from bytes
     pk_charlie = get_public_key_from_bytes(keystore["Charlie"].addr_pk.enc_pk)
 
-    # encrypt the coins
+    # Encrypt the coins
     (pk_sender, ciphertexts) = joinsplit.encrypt_notes([
         (output_note1, pk_charlie),
         (output_note2, pk_charlie)])
 
-    # Hashing all inputs of the signature
-    # Encode the ciphertexts and ephemeral encryption key
-    data_to_be_signed = pk_sender + ciphertexts[0] + ciphertexts[1]
-
-    # Encode the proof
-    proof: List[str] = []
-    for key in proof_json.keys():
-        if key != "inputs":
-            proof.extend(proof_json[key])
-    data_to_be_signed += encode_to_hash(proof)
-
-    # Encode the primary inputs
-    encoded_inputs = encode_to_hash(proof_json["inputs"])
-    data_to_be_signed += encoded_inputs
-
-    # Hash data_to_be_sign
-    hash_tobesign = sha256(data_to_be_signed).hexdigest()
-
-    # Compute the joinSplit signature
-    joinsplit_sig = joinsplit.sign(joinsplit_keypair, hash_tobesign)
+    # Signs the primary inputs, pk_sender and the ciphertexts
+    joinsplit_sig = joinsplit.sign_joinsplit(
+        joinsplit_keypair,
+        pk_sender,
+        ciphertexts,
+        proof_json
+    )
 
     return contracts.mix(
         mixer_instance,
@@ -427,8 +373,9 @@ def charlie_corrupt_bob_deposit(
     Charlie tries to break transaction malleability and corrupt the coins
     bob is sending in a transaction
     She does so by intercepting bob's transaction and either:
-    - case 1: replacing the ciphertexts (or pk_sender) to garbage
-    - case 2: replacing the ciphertexts to garbage and using a new OT-signature
+    - case 1: replacing the ciphertexts (or pk_sender) by garbage/arbitrary data
+    - case 2: replacing the ciphertexts by garbage/arbitrary data and using a
+    new OT-signature
     Both attacks should fail,
     - case 1: the signature check should fail, else Charlie broke UF-CMA
         of the OT signature
@@ -477,40 +424,27 @@ def charlie_corrupt_bob_deposit(
             zksnark
     )
 
-    # construct pk object from bytes
+    # Construct pk object from bytes
     pk_bob = get_public_key_from_bytes(keystore["Bob"].addr_pk.enc_pk)
 
-    # encrypt the coins
+    # Encrypt the coins
     (pk_sender, ciphertexts) = joinsplit.encrypt_notes([
         (output_note1, pk_bob),
         (output_note2, pk_bob)])
 
-    # Hashing all inputs of the signature
-    # Encode the ciphertexts and ephemeral encryption key
-    data_to_be_signed = pk_sender + ciphertexts[0] + ciphertexts[1]
-
-    # Encode the proof
-    proof: List[str] = []
-    for key in proof_json.keys():
-        if key != "inputs":
-            proof.extend(proof_json[key])
-    data_to_be_signed += encode_to_hash(proof)
-
-    # Encode the primary inputs
-    encoded_inputs = encode_to_hash(proof_json["inputs"])
-    data_to_be_signed += encoded_inputs
-
-    # Hash data_to_be_sign
-    hash_tobesign = sha256(data_to_be_signed).hexdigest()
-
-    # Compute the joinSplit signature
-    joinsplit_sig = joinsplit.sign(joinsplit_keypair, hash_tobesign)
+    # Signs the primary inputs, pk_sender and the ciphertexts
+    joinsplit_sig = joinsplit.sign_joinsplit(
+        joinsplit_keypair,
+        pk_sender,
+        ciphertexts,
+        proof_json
+    )
 
     # ### ATTACK BLOCK
-    # Charlie intercept Bob's deposit, corrupt it and
-    # send her transaction before Bob's transaction is accepted
+    # Charlie intercepts Bob's deposit, corrupts it and
+    # sends her transaction before Bob's transaction is accepted
 
-    # Case 1: replacing the ciphertexts to garbage
+    # Case 1: replacing the ciphertexts by garbage/arbitrary data
     # Corrupt the ciphertexts
     # (another way would have been to overwrite pk_sender)
     fake_ciphertext0 = urandom(32)
@@ -542,30 +476,20 @@ def charlie_corrupt_bob_deposit(
         "Charlie managed to corrupt Bob's deposit the first time!"
     print("")
 
-    # Case 2: replacing the ciphertexts to garbage and using a new OT-signature
+    # Case 2: replacing the ciphertexts by garbage/arbitrary data and
+    # using a new OT-signature
     # Corrupt the ciphertexts
     fake_ciphertext0 = urandom(32)
     fake_ciphertext1 = urandom(32)
-
-    # Hashing all inputs of the signature
-    # Encode the ciphertexts and ephemeral encryption key
-    data_to_be_signed = pk_sender + fake_ciphertext0 + fake_ciphertext1
-
-    # Encode the proof
-    data_to_be_signed += encode_to_hash(proof)
-
-    # Encode the primary inputs
-    encoded_inputs = encode_to_hash(proof_json["inputs"])
-    data_to_be_signed += encoded_inputs
-
-    # Hash data_to_be_sign
-    hash_tobesign = sha256(data_to_be_signed).hexdigest()
-
-    # Compute new joinSplit key pair
     new_joinsplit_keypair = joinsplit.gen_one_time_schnorr_vk_sk_pair()
 
-    # Compute the joinSplit signature
-    new_joinsplit_sig = joinsplit.sign(new_joinsplit_keypair, hash_tobesign)
+    # Signs the primary inputs, pk_sender and the ciphertexts
+    new_joinsplit_sig = joinsplit.sign_joinsplit(
+        new_joinsplit_keypair,
+        pk_sender,
+        [fake_ciphertext0, fake_ciphertext1],
+        proof_json
+    )
 
     result_corrupt2 = None
     try:

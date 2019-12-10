@@ -3,7 +3,7 @@ import zeth.constants as constants
 import zeth.errors as errors
 from zeth.utils import get_trusted_setup_dir, hex_extend_32bytes, \
     hex_digest_to_binary_string, encode_abi, encrypt, decrypt, \
-    get_public_key_from_bytes
+    get_public_key_from_bytes, encode_to_hash
 from zeth.prover_client import ProverClient
 from api.util_pb2 import ZethNote, JoinsplitInput, HexPointBaseGroup1Affine, \
     HexPointBaseGroup2Affine
@@ -263,6 +263,38 @@ def sign(
     sigma = sk[1].n + h * sk[0].n % constants.ZETH_PRIME
 
     return sigma
+
+
+def sign_joinsplit(
+        joinsplit_keypair: JoinsplitKeypair,
+        pk_sender: bytes,
+        ciphertexts: List[bytes],
+        proof_json: Dict[str, Any]) -> int:
+
+    # Hashing all inputs of the signature
+    # Encode the ciphertexts and ephemeral encryption key
+    data_to_be_signed = pk_sender
+
+    for cipher in ciphertexts:
+        data_to_be_signed += cipher
+
+    # Encode the proof
+    proof: List[str] = []
+    for key in proof_json.keys():
+        if key != "inputs":
+            proof.extend(proof_json[key])
+    data_to_be_signed += encode_to_hash(proof)
+
+    # Encode the primary inputs
+    data_to_be_signed += encode_to_hash(proof_json["inputs"])
+
+    # Hash data_to_be_sign
+    hash_tobesign = sha256(data_to_be_signed).hexdigest()
+
+    # Compute the joinSplit signature
+    joinsplit_sig = sign(joinsplit_keypair, hash_tobesign)
+
+    return joinsplit_sig
 
 
 def parse_verification_key_pghr13(
