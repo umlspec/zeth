@@ -2,8 +2,8 @@ from __future__ import annotations
 import zeth.constants as constants
 import zeth.errors as errors
 from zeth.utils import get_trusted_setup_dir, hex_extend_32bytes, \
-    hex_digest_to_binary_string, string_list_flatten, encode_single, \
-    encode_abi, encrypt, decrypt, get_public_key_from_bytes
+    hex_digest_to_binary_string, encode_abi, encrypt, decrypt, \
+    get_public_key_from_bytes
 from zeth.prover_client import ProverClient
 from api.util_pb2 import ZethNote, JoinsplitInput, HexPointBaseGroup1Affine, \
     HexPointBaseGroup2Affine
@@ -17,7 +17,7 @@ import sys
 from Crypto import Random
 from hashlib import blake2s, sha256
 from py_ecc import bn128 as ec
-from typing import Tuple, Dict, List, Iterable, Union, Any
+from typing import Tuple, Dict, List, Iterable, Any
 
 
 FQ = ec.FQ
