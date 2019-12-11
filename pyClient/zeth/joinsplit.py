@@ -230,7 +230,7 @@ def gen_one_time_schnorr_vk_sk_pair() -> JoinsplitKeypair:
 
 def sign(
         keypair: JoinsplitKeypair,
-        hash_to_be_sign: str) -> int:
+        hash_to_be_signed: str) -> int:
     """
     Generate a Schnorr signature on a hash.
     We chose to sign the hash of the proof for modularity (to
@@ -251,7 +251,7 @@ def sign(
         [
             bytes.fromhex(y0_hex),
             bytes.fromhex(y1_hex),
-            bytes.fromhex(hash_to_be_sign)
+            bytes.fromhex(hash_to_be_signed)
         ]
     )
     data_hex = sha256(data_to_sign).hexdigest()
