@@ -1,10 +1,13 @@
 from __future__ import annotations
 import zeth.constants as constants
 import zeth.errors as errors
-from zeth.utils import get_trusted_setup_dir, hex_extend_32bytes, \
+from zeth.utils import get_trusted_setup_dir, \
     hex_digest_to_binary_string, encode_abi, encrypt, decrypt, \
     get_public_key_from_bytes, encode_to_hash
 from zeth.prover_client import ProverClient
+from zeth.ot_schnorr import key_gen, sign, encode_vk, \
+    SchnorrKeyPair as keypair_ot, SchnorrSigningKey as sk_ot, \
+    SchnorrVerificationKey as JoinsplitPublicKey
 from api.util_pb2 import ZethNote, JoinsplitInput, HexPointBaseGroup1Affine, \
     HexPointBaseGroup2Affine
 from nacl.public import PrivateKey, PublicKey  # type: ignore
@@ -28,23 +31,6 @@ class ApkAskPair:
     def __init__(self, a_sk: str, a_pk: str):
         self.a_pk = a_pk
         self.a_sk = a_sk
-
-
-# Joinsplit Secret Key
-JoinsplitSecretKey = Tuple[FQ, FQ]
-
-
-# Joinsplit Public Key
-JoinsplitPublicKey = Tuple[G1, G1]
-
-
-class JoinsplitKeypair:
-    """
-    A Joinsplit secret and public keypair.
-    """
-    def __init__(self, x: FQ, y: FQ, x_g1: G1, y_g1: G1):
-        self.vk = (x_g1, y_g1)
-        self.sk = (x, y)
 
 
 # Dictionary representing a VerificationKey from any supported snark
@@ -218,55 +204,8 @@ def create_joinsplit_input(
     )
 
 
-def gen_one_time_schnorr_vk_sk_pair() -> JoinsplitKeypair:
-    x = FQ(
-        int(bytes(Random.get_random_bytes(32)).hex(), 16) % constants.ZETH_PRIME)
-    X = ec.multiply(ec.G1, x.n)
-    y = FQ(
-        int(bytes(Random.get_random_bytes(32)).hex(), 16) % constants.ZETH_PRIME)
-    Y = ec.multiply(ec.G1, y.n)
-    return JoinsplitKeypair(x, y, X, Y)
-
-
-def sign(
-        keypair: JoinsplitKeypair,
-        hash_to_be_signed: str) -> int:
-    """
-    Generate a Schnorr signature on a hash.
-    We chose to sign the hash of the proof for modularity (to
-    use the same code regardless of whether GROTH16 or PGHR13 proof system is
-    chosen), and sign the hash of the ciphers and inputs for consistency.
-    """
-    # Parse the signature key pair
-    vk = keypair.vk
-    sk = keypair.sk
-
-    # Format part of the public key as an hex
-    y0_hex = hex_extend_32bytes("{0:0>64X}".format(int(vk[1][0])))
-    y1_hex = hex_extend_32bytes("{0:0>64X}".format(int(vk[1][1])))
-
-    # Encode and hash the verifying key and input hashes
-    data_to_sign = encode_abi(
-        ["bytes32", "bytes32", "bytes32"],
-        [
-            bytes.fromhex(y0_hex),
-            bytes.fromhex(y1_hex),
-            bytes.fromhex(hash_to_be_signed)
-        ]
-    )
-    data_hex = sha256(data_to_sign).hexdigest()
-
-    # Convert the hex digest into a field element
-    h = int(data_hex, 16) % constants.ZETH_PRIME
-
-    # Compute the signature sigma
-    sigma = sk[1].n + h * sk[0].n % constants.ZETH_PRIME
-
-    return sigma
-
-
 def sign_joinsplit(
-        joinsplit_keypair: JoinsplitKeypair,
+        joinsplit_sk: sk_ot,
         pk_sender: bytes,
         ciphertexts: List[bytes],
         proof_json: Dict[str, Any]) -> int:
@@ -293,10 +232,10 @@ def sign_joinsplit(
     data_to_be_signed += encode_to_hash(proof_json["inputs"])
 
     # Hash data_to_be_sign
-    hash_to_be_sign = sha256(data_to_be_signed).hexdigest()
+    hash_to_be_signed = sha256(data_to_be_signed).hexdigest()
 
     # Compute the joinSplit signature
-    joinsplit_sig = sign(joinsplit_keypair, hash_to_be_sign)
+    joinsplit_sig = sign(joinsplit_sk, hash_to_be_signed)
 
     return joinsplit_sig
 
@@ -545,12 +484,12 @@ def get_proof_joinsplit_2_by_2(
         public_in_value: str,
         public_out_value: str,
         zksnark: str
-) -> Tuple[ZethNote, ZethNote, Dict[str, Any], JoinsplitKeypair]:
+) -> Tuple[ZethNote, ZethNote, Dict[str, Any], keypair_ot]:
     """
     Query the prover server to generate a proof for the given joinsplit
     parameters.
     """
-    joinsplit_keypair = gen_one_time_schnorr_vk_sk_pair()
+    joinsplit_keypair = key_gen()
     proof_input = compute_joinsplit2x2_inputs(
         mk_root,
         input_note0,
@@ -596,12 +535,12 @@ def get_proof_joinsplit_2_by_2_attack_nf(
         public_in_value: str,
         public_out_value: str,
         zksnark: str
-) -> Tuple[ZethNote, ZethNote, Dict[str, Any], JoinsplitKeypair]:
+) -> Tuple[ZethNote, ZethNote, Dict[str, Any], keypair_ot]:
     """
     Query the prover server to generate a proof for the given joinsplit
     parameters.
     """
-    joinsplit_keypair = gen_one_time_schnorr_vk_sk_pair()
+    joinsplit_keypair = key_gen()
     proof_input = compute_joinsplit2x2_inputs_attack_nf(
         mk_root,
         input_note0,
@@ -677,26 +616,14 @@ def _compute_h_sig(
     Flatten the verification key
     """
 
-    js_pub_key_hex = [item for sublist in joinsplit_pub_key for item in sublist]
-
-    vk_hex = []
-    for item in js_pub_key_hex:
-        # For each element of the list, convert it to an hex and append it
-        vk_hex.append(hex_extend_32bytes("{0:0>64X}".format(int(item))))
-
     h_sig = sha256(
         encode_abi(
-            ['bytes32', 'bytes32',
-             'bytes32', 'bytes32', 'bytes32', 'bytes32'],
+            ['bytes32', 'bytes32'],
             [
                 bytes.fromhex(nf0),
                 bytes.fromhex(nf1),
-                bytes.fromhex(vk_hex[0]),
-                bytes.fromhex(vk_hex[1]),
-                bytes.fromhex(vk_hex[2]),
-                bytes.fromhex(vk_hex[3])
             ]
-        )
+        ) + encode_vk(joinsplit_pub_key)
     ).hexdigest()
     return h_sig
 
