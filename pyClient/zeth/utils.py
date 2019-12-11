@@ -223,6 +223,7 @@ def encode_to_hash(message_list: Any) -> bytes:
     Encode a list of variables, or list of lists of variables into a byte
     vector
     BEWARE //!\\ We rely on the fact that the prime (q of Fq) < 2**256-1
+    where 256 is the bit-size of an Ethereum word (bytes32)
     """
 
     messages = string_list_flatten(message_list)
@@ -238,7 +239,7 @@ def encode_to_hash(message_list: Any) -> bytes:
                 "a bytes32 (longer than 256 bits)"
 
             m_hex = "{0:0>64X}".format(int(m))
-        elif isinstance(m, str) and (m[1] == "x"):
+        elif isinstance(m, str) and (m[0:2] == "0x"):
             m_hex = m[2:]
 
         # [SANITY CHECK] Make sure the hex is 32 byte long

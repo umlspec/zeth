@@ -111,7 +111,7 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
     // This function processes the primary inputs to append and check the root and nullifiers in the primary inputs (instance)
     // and modifies the state of the mixer contract accordingly
     // (ie: Appends the commitments to the tree, appends the nullifiers to the list and so on)
-    function assemble_and_check_root_nullifiers_and_vk_and_append_to_state(
+    function check_mkroot_nullifiers_hsig_append_nullifiers_state(
         uint[2][2] memory vk,
         uint[] memory primary_inputs)
 

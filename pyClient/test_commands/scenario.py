@@ -75,7 +75,7 @@ def bob_deposit(
         (output_note1, pk_bob),
         (output_note2, pk_bob)])
 
-    # Signs the primary inputs, pk_sender and the ciphertexts
+    # Sign the primary inputs, pk_sender and the ciphertexts
     joinsplit_sig = joinsplit.sign_joinsplit(
         joinsplit_keypair,
         pk_sender,
@@ -155,7 +155,7 @@ def bob_to_charlie(
         (output_note2,
          get_public_key_from_bytes(keystore["Charlie"].addr_pk.enc_pk))])
 
-    # Signs the primary inputs, pk_sender and the ciphertexts
+    # Sign the primary inputs, pk_sender and the ciphertexts
     joinsplit_sig = joinsplit.sign_joinsplit(
         joinsplit_keypair,
         pk_sender,
@@ -234,7 +234,7 @@ def charlie_withdraw(
         (output_note1, pk_charlie),
         (output_note2, pk_charlie)])
 
-    # Signs the primary inputs, pk_sender and the ciphertexts
+    # Sign the primary inputs, pk_sender and the ciphertexts
     joinsplit_sig = joinsplit.sign_joinsplit(
         joinsplit_keypair,
         pk_sender,
@@ -335,7 +335,7 @@ def charlie_double_withdraw(
         (output_note1, pk_charlie),
         (output_note2, pk_charlie)])
 
-    # Signs the primary inputs, pk_sender and the ciphertexts
+    # Sign the primary inputs, pk_sender and the ciphertexts
     joinsplit_sig = joinsplit.sign_joinsplit(
         joinsplit_keypair,
         pk_sender,
@@ -432,7 +432,7 @@ def charlie_corrupt_bob_deposit(
         (output_note1, pk_bob),
         (output_note2, pk_bob)])
 
-    # Signs the primary inputs, pk_sender and the ciphertexts
+    # Sign the primary inputs, pk_sender and the ciphertexts
     joinsplit_sig = joinsplit.sign_joinsplit(
         joinsplit_keypair,
         pk_sender,
@@ -483,7 +483,7 @@ def charlie_corrupt_bob_deposit(
     fake_ciphertext1 = urandom(32)
     new_joinsplit_keypair = joinsplit.gen_one_time_schnorr_vk_sk_pair()
 
-    # Signs the primary inputs, pk_sender and the ciphertexts
+    # Sign the primary inputs, pk_sender and the ciphertexts
     new_joinsplit_sig = joinsplit.sign_joinsplit(
         new_joinsplit_keypair,
         pk_sender,

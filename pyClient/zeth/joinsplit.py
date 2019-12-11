@@ -230,10 +230,10 @@ def gen_one_time_schnorr_vk_sk_pair() -> JoinsplitKeypair:
 
 def sign(
         keypair: JoinsplitKeypair,
-        hash_signature: str) -> int:
+        hash_to_be_sign: str) -> int:
     """
-    Generate a Schnorr one-time signature of the ciphertexts, proofs and
-    primary inputs We chose to sign the hash of the proof for modularity (to
+    Generate a Schnorr signature on a hash.
+    We chose to sign the hash of the proof for modularity (to
     use the same code regardless of whether GROTH16 or PGHR13 proof system is
     chosen), and sign the hash of the ciphers and inputs for consistency.
     """
@@ -251,7 +251,7 @@ def sign(
         [
             bytes.fromhex(y0_hex),
             bytes.fromhex(y1_hex),
-            bytes.fromhex(hash_signature)
+            bytes.fromhex(hash_to_be_sign)
         ]
     )
     data_hex = sha256(data_to_sign).hexdigest()
@@ -270,6 +270,10 @@ def sign_joinsplit(
         pk_sender: bytes,
         ciphertexts: List[bytes],
         proof_json: Dict[str, Any]) -> int:
+    """
+    Generate a Schnorr signature on the hash of the ciphertexts, proofs
+    and primary inputs. This is used to solve transaction malleability.
+    """
 
     # Hashing all inputs of the signature
     # Encode the ciphertexts and ephemeral encryption key
@@ -289,10 +293,10 @@ def sign_joinsplit(
     data_to_be_signed += encode_to_hash(proof_json["inputs"])
 
     # Hash data_to_be_sign
-    hash_tobesign = sha256(data_to_be_signed).hexdigest()
+    hash_to_be_sign = sha256(data_to_be_signed).hexdigest()
 
     # Compute the joinSplit signature
-    joinsplit_sig = sign(joinsplit_keypair, hash_tobesign)
+    joinsplit_sig = sign(joinsplit_keypair, hash_to_be_sign)
 
     return joinsplit_sig
 

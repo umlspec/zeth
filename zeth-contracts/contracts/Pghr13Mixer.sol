@@ -34,7 +34,7 @@ contract Pghr13Mixer is BaseMixer {
         bytes memory ciphertext1 // Nb of ciphertexts depends on the JS description (Here 2 inputs)
         ) public payable {
         // 1. Check the root and the nullifiers and vk
-        assemble_and_check_root_nullifiers_and_vk_and_append_to_state(vk, input);
+        check_mkroot_nullifiers_hsig_append_nullifiers_state(vk, input);
 
         // 2.a Verify the proof and that the primary inputs are in the scalar field
         require(
@@ -43,7 +43,7 @@ contract Pghr13Mixer is BaseMixer {
         );
 
         // 2.b Verify the signature on the hash of data_to_be_signed
-        bytes32 hash_tobesigned = sha256(
+        bytes32 hash_to_be_signed = sha256(
             abi.encodePacked(
                 pk_sender,
                 ciphertext0,
@@ -63,7 +63,7 @@ contract Pghr13Mixer is BaseMixer {
             otsig_verifier.verify(
                 vk,
                 sigma,
-                hash_tobesigned
+                hash_to_be_signed
                 ),
             "Invalid signature: Unable to verify the signature correctly"
         );
