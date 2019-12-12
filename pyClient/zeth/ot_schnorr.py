@@ -19,6 +19,7 @@ class SchnorrVerificationKey:
         self.ppk = x_g1
         self.spk = y_g1
 
+
 class SchnorrSigningKey:
     """
     A Joinsplit secret and public keypair.
@@ -26,6 +27,7 @@ class SchnorrSigningKey:
     def __init__(self, x: FQ, y: FQ, y_g1: G1):
         self.psk = x
         self.ssk = (y, y_g1)
+
 
 class SchnorrKeyPair:
     """
@@ -46,6 +48,7 @@ def key_gen() -> SchnorrKeyPair:
     X = ec.multiply(ec.G1, x.n)
     Y = ec.multiply(ec.G1, y.n)
     return SchnorrKeyPair(x, y, X, Y)
+
 
 def gen_vk(sk: SchnorrSigningKey) -> SchnorrVerificationKey:
     x = sk.psk
@@ -72,9 +75,7 @@ def encode_vk(vk: SchnorrVerificationKey) -> bytes:
     return vk_byte
 
 
-def sign(
-        sk: SchnorrSigningKey,
-        m: str) -> int:
+def sign(sk: SchnorrSigningKey, m: str) -> int:
     """
     Generate a Schnorr signature on a hash.
     We chose to sign the hash of the proof for modularity (to
@@ -83,30 +84,38 @@ def sign(
     """
 
     # Encode and hash the verifying key and input hashes
-    challenge_to_hash = encode_group_element(sk.ssk[1]) + encode_single("bytes32", bytes.fromhex(m))
+    challenge_to_hash = \
+        encode_group_element(sk.ssk[1]) + \
+        encode_single("bytes32", bytes.fromhex(m))
 
     # Convert the hex digest into a field element
-    challenge = int(sha256(challenge_to_hash).hexdigest(), 16) % constants.ZETH_PRIME
+    challenge = \
+        int(sha256(challenge_to_hash).hexdigest(), 16) % constants.ZETH_PRIME
 
     # Compute the signature sigma
     sigma = (sk.ssk[0].n + challenge * sk.psk.n) % constants.ZETH_PRIME
 
     return sigma
 
+
 def verify(
-    vk: SchnorrVerificationKey,
-    m: str,
-    sigma: int) -> bool:
+        vk: SchnorrVerificationKey,
+        m: str,
+        sigma: int) -> bool:
 
     # Encode and hash the verifying key and input hashes
-    challenge_to_hash = encode_group_element(vk.spk) + encode_single("bytes32", bytes.fromhex(m))
+    challenge_to_hash = \
+        encode_group_element(vk.spk) + \
+        encode_single("bytes32", bytes.fromhex(m))
 
-    challenge = int(sha256(challenge_to_hash).hexdigest(), 16) % constants.ZETH_PRIME
+    challenge = \
+        int(sha256(challenge_to_hash).hexdigest(), 16) % constants.ZETH_PRIME
 
     left_part = ec.multiply(ec.G1, FQ(sigma).n)
     right_part = ec.add(vk.spk, ec.multiply(vk.ppk, FQ(challenge).n))
 
     return ec.eq(left_part, right_part)
+
 
 def test_all() -> None:
     m = urandom(32).hex()
