@@ -7,21 +7,19 @@ pragma solidity ^0.5.0;
 import "./MerkleTreeMiMC7.sol";
 import "./Bytes.sol";
 
-/*
- * Declare the ERC20 interface in order to handle ERC20 tokens transfers
- * to and from the Mixer. Note that we only declare the functions we are interested in,
- * namely, transferFrom() (used to do a Deposit), and transfer() (used to do a withdrawal)
-**/
+// Declare the ERC20 interface in order to handle ERC20 tokens transfers to and
+// from the Mixer. Note that we only declare the functions we are interested in,
+// namely, transferFrom() (used to do a Deposit), and transfer() (used to do a
+// withdrawal)
 contract ERC20 {
     function transferFrom(address from, address to, uint256 value) public;
     function transfer(address to, uint256 value) public;
 }
 
-/*
- * ERC223 token compatible contract
-**/
+// ERC223 token compatible contract
 contract ERC223ReceivingContract {
-    // See: https://github.com/Dexaran/ERC223-token-standard/blob/Recommended/Receiver_Interface.sol
+    // See:
+    //   https://github.com/Dexaran/ERC223-token-standard/blob/Recommended/Receiver_Interface.sol
     struct Token {
         address sender;
         uint value;
@@ -29,21 +27,26 @@ contract ERC223ReceivingContract {
         bytes4 sig;
     }
 
-    function tokenFallback(address from, uint value, bytes memory data) public pure {
+    function tokenFallback(
+        address from, uint value, bytes memory data) public pure {
         Token memory tkn;
         tkn.sender = from;
         tkn.value = value;
         tkn.data = data;
 
-         // see https://solidity.readthedocs.io/en/v0.5.5/types.html#conversions-between-elementary-types
-        uint32 u = uint32(bytes4(data[0])) + uint32(bytes4(data[1]) >> 8) + uint32(bytes4(data[2]) >> 16) + uint32(bytes4(data[3]) >> 24);
+         // See:
+         //   https://solidity.readthedocs.io/en/v0.5.5/types.html#conversions-between-elementary-types
+        uint32 u =
+            uint32(bytes4(data[0])) +
+            uint32(bytes4(data[1]) >> 8) +
+            uint32(bytes4(data[2]) >> 16) +
+            uint32(bytes4(data[3]) >> 24);
         tkn.sig = bytes4(u);
     }
 }
 
-/*
- * BaseMixer implements the functions shared across all Mixers (regardless which zkSNARK is used)
-**/
+// BaseMixer implements the functions shared across all Mixers (regardless which
+// zkSNARK is used)
 contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
     using Bytes for *;
 
@@ -53,15 +56,21 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
     // The public list of nullifiers (prevents double spend)
     mapping(bytes32 => bool) nullifiers;
 
-    // JoinSplit description, gives the number of inputs (nullifiers) and outputs (commitments/ciphertexts) to receive and process
-    // IMPORTANT NOTE: We need to employ the same JS configuration than the one used in the cpp prover
-    // Here we use 2 inputs and 2 outputs (it is a 2-2 JS)
-    // The number or public inputs is: 1 (the root) + 2 for each digest (nullifiers, commitments) + (1 + 1) (in and out public values) field elements
+    // JoinSplit description, gives the number of inputs (nullifiers) and
+    // outputs (commitments/ciphertexts) to receive and process.
+    //
+    // IMPORTANT NOTE: We need to employ the same JS configuration than the one
+    // used in the cpp prover. Here we use 2 inputs and 2 outputs (it is a 2-2
+    // JS). The number or public inputs is: 1 (the root) + 2 for each digest
+    // (nullifiers, commitments) + (1 + 1) (in and out public values) field
+    // elements
     uint constant jsIn = 2; // Nb of nullifiers
     uint constant jsOut = 2; // Nb of commitments/ciphertexts
 
-    // We have 2 field elements for each digest (nullifierS (jsIn), commitmentS (jsOut), h_iS (jsIn) and h_sig)
-    // The root, v_pub_in and v_pub_out are all represented by one field element, so we have 1 + 1 + 1 extra public values
+    // We have 2 field elements for each digest (nullifierS (jsIn), commitmentS
+    // (jsOut), h_iS (jsIn) and h_sig).  The root, v_pub_in and v_pub_out are
+    // all represented by one field element, so we have 1 + 1 + 1 extra public
+    // values
     uint constant nbInputs = 1 + 2 * (jsIn + jsOut) + 1 + 1 + 2 * (1 + jsIn);
 
     // Contract variable that indicates the address of the token contract
@@ -72,27 +81,29 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
     // the python wrappers. Use Szabos (10^12 Wei).
     uint64 constant public_unit_value_wei = 1 szabo;
 
-    // Event to emit the address of a commitment in the merke tree
-    // Allows for faster execution of the "Receive" functions on the receiver side.
-    // The ciphertext of a note is emitted along the address of insertion in the tree
-    // Thus, instead of checking that the decrypted note is represented somewhere in the tree, the recipient just needs
-    // to check that the decrypted note opens the commitment at the emitted address
+    // Event to emit the address of a commitment in the merke tree Allows for
+    // faster execution of the "Receive" functions on the receiver side.  The
+    // ciphertext of a note is emitted along the address of insertion in the
+    // tree.  Thus, instead of checking that the decrypted note is represented
+    // somewhere in the tree, the recipient just needs to check that the
+    // decrypted note opens the commitment at the emitted address
     event LogCommitment(uint commAddr, bytes32 commit);
 
     // Event to emit the root of a the merkle tree
     event LogMerkleRoot(bytes32 root);
 
-    // Event to emit the encryption public key of the sender and ciphertexts of the coins' data to be sent to the recipient of the payment
-    // This event is key to obfuscate the transaction graph while enabling on-chain storage of the coins' data
-    // (useful to ease backup of user's wallets)
+    // Event to emit the encryption public key of the sender and ciphertexts of
+    // the coins' data to be sent to the recipient of the payment.  This event
+    // is key to obfuscate the transaction graph while enabling on-chain storage
+    // of the coins' data (useful to ease backup of user's wallets)
     event LogSecretCiphers(bytes32 pk_sender, bytes ciphertext);
 
     // Debug only
     event LogDebug(string message);
 
     // Constructor
-    constructor(uint depth, address token_address)
-        MerkleTreeMiMC7(depth) public {
+    constructor(
+        uint depth, address token_address) MerkleTreeMiMC7(depth) public {
         // We log the first root to get started
         bytes32 initialRoot = getRoot();
         roots[initialRoot] = true;
@@ -101,11 +112,14 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
         token = token_address;
     }
 
-    // ============================================================================================ //
+    // ====================================================================== //
     // Reminder: Remember that the primary inputs are ordered as follows:
-    // We make sure to have the primary inputs ordered as follow:
-    // [Root, NullifierS, CommitmentS, value_pub_in, value_pub_out]
-    // ie, below is the index mapping of the primary input elements on the protoboard:
+    //
+    //   [Root, NullifierS, CommitmentS, value_pub_in, value_pub_out]
+    //
+    // ie, below is the index mapping of the primary input elements on the
+    // protoboard:
+    //
     // - Index of the "Root" field elements: {0}
     // - Index of the "NullifierS" field elements: [1, NumInputs + 1[
     // - Index of the "CommitmentS" field elements: [NumInputs + 1, NumOutputs + NumInputs + 1[
@@ -139,8 +153,9 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
             nullifiers[nfs[(i-1)/2]] = true;
         }
 
-        // 3. We re-compute h_sig, re-assemble the expected h_sig and check they are equal
-        // (i.e. that h_sig re-assembled was correctly generated from vk)
+        // 3. We re-compute h_sig, re-assemble the expected h_sig and check they
+        // are equal (i.e. that h_sig re-assembled was correctly generated from
+        // vk)
         bytes32 expected_hsig = sha256(abi.encodePacked(nfs, vk));
 
         digest_inputs[0] = primary_inputs[1 + 2 * (jsIn + jsOut) + 1 + 1];
@@ -152,13 +167,16 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
         );
     }
 
-    function assemble_commitments_and_append_to_state(uint[] memory primary_inputs) internal {
+    function assemble_commitments_and_append_to_state(
+        uint[] memory primary_inputs) internal {
         // We re-assemble the commitments (JSOutputs)
         uint256[] memory digest_inputs = new uint[](2);
         for(uint i = 1 + 2 * jsIn ; i < 1 + 2*(jsIn + jsOut); i += 2) {
-            digest_inputs[0] = primary_inputs[i]; // See the way the inputs are ordered in the extended proof
+            // See the way the inputs are ordered in the extended proof
+            digest_inputs[0] = primary_inputs[i];
             digest_inputs[1] = primary_inputs[i+1];
-            bytes32 current_commitment = Bytes.sha256_digest_from_field_elements(digest_inputs);
+            bytes32 current_commitment =
+                Bytes.sha256_digest_from_field_elements(digest_inputs);
             uint commitment_address = insert(current_commitment);
             emit LogCommitment(commitment_address, current_commitment);
         }
@@ -192,8 +210,8 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
             Bytes.int256ToBytes8(primary_inputs[2*(1 + jsIn + jsOut)]));
         uint vpub_out = vpub_out_zeth_units * public_unit_value_wei;
 
-        // If value_pub_out > 0 then we do a withdraw
-        // We retrieve the msg.sender and send him the appropriate value IF proof is valid
+        // If value_pub_out > 0 then we do a withdraw.  We retrieve the
+        // msg.sender and send him the appropriate value IF proof is valid
         if (vpub_out > 0) {
             if (token != address(0)) {
                 ERC20 erc20Token = ERC20(token);
@@ -209,7 +227,10 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
         emit LogMerkleRoot(root);
     }
 
-    function emit_ciphertexts(bytes32 pk_sender, bytes memory ciphertext0, bytes memory ciphertext1) internal {
+    function emit_ciphertexts(
+        bytes32 pk_sender,
+        bytes memory ciphertext0,
+        bytes memory ciphertext1) internal {
         emit LogSecretCiphers(pk_sender, ciphertext0);
         emit LogSecretCiphers(pk_sender, ciphertext1);
     }
