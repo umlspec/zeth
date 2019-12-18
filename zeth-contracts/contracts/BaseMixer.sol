@@ -139,28 +139,29 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
             "Invalid root: This root doesn't exist"
         );
 
-        // 2. We re-assemble the nullifiers (JSInputs) and check they were not already seen
+        // 2. We re-assemble the nullifiers (JSInputs) and check they were not
+        // already seen
         bytes32[jsIn] memory nfs;
-        uint256[] memory digest_inputs = new uint[](2);
+        uint nf_idx = 0;
         for(uint i = 1; i < 1 + 2*jsIn; i += 2) {
-            digest_inputs[0] = primary_inputs[i];
-            digest_inputs[1] = primary_inputs[i+1];
-            nfs[(i-1)/2] = Bytes.sha256_digest_from_field_elements(digest_inputs);
+            bytes32 nullifier = Bytes.sha256_digest_from_field_elements(
+                primary_inputs[i], primary_inputs[i+1]);
+            nfs[nf_idx] = nullifier;
             require(
-                !nullifiers[nfs[(i-1)/2]],
+                !nullifiers[nullifier],
                 "Invalid nullifier: This nullifier has already been used"
             );
-            nullifiers[nfs[(i-1)/2]] = true;
+            nullifiers[nullifier] = true;
+            ++nf_idx;
         }
 
         // 3. We re-compute h_sig, re-assemble the expected h_sig and check they
         // are equal (i.e. that h_sig re-assembled was correctly generated from
         // vk)
         bytes32 expected_hsig = sha256(abi.encodePacked(nfs, vk));
-
-        digest_inputs[0] = primary_inputs[1 + 2 * (jsIn + jsOut) + 1 + 1];
-        digest_inputs[1] = primary_inputs[1 + 2 * (jsIn + jsOut + 1) + 1];
-        bytes32 hsig = Bytes.sha256_digest_from_field_elements(digest_inputs);
+        bytes32 hsig = Bytes.sha256_digest_from_field_elements(
+            primary_inputs[1 + 2 * (jsIn + jsOut) + 1 + 1],
+            primary_inputs[1 + 2 * (jsIn + jsOut + 1) + 1]);
         require(
             expected_hsig == hsig,
             "Invalid hsig: This hsig does not correspond to the hash of vk and the nfs"
@@ -170,15 +171,12 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
     function assemble_commitments_and_append_to_state(
         uint[] memory primary_inputs) internal {
         // We re-assemble the commitments (JSOutputs)
-        uint256[] memory digest_inputs = new uint[](2);
         for(uint i = 1 + 2 * jsIn ; i < 1 + 2*(jsIn + jsOut); i += 2) {
             // See the way the inputs are ordered in the extended proof
-            digest_inputs[0] = primary_inputs[i];
-            digest_inputs[1] = primary_inputs[i+1];
-            bytes32 current_commitment =
-                Bytes.sha256_digest_from_field_elements(digest_inputs);
-            uint commitment_address = insert(current_commitment);
-            emit LogCommitment(commitment_address, current_commitment);
+            bytes32 commitment = Bytes.sha256_digest_from_field_elements(
+                primary_inputs[i], primary_inputs[i+1]);
+            uint commitment_address = insert(commitment);
+            emit LogCommitment(commitment_address, commitment);
         }
     }
 
