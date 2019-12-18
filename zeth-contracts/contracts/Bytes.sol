@@ -6,13 +6,13 @@ pragma solidity ^0.5.0;
 
 library Bytes {
 
-    function sha256_digest_from_field_elements(uint[] memory input)
+    function sha256_digest_from_field_elements(uint input0, uint input1)
         internal pure returns (bytes32) {
 
         // We know that input[0] is a field element.  Thus, it is encoded on 253
         // bits, and it should be the biggest between inputs[0] and inputs[1].
         // Inputs[0] actually contains 253 bits from the digest
-        bytes32 inverted_input1 = flip_endianness_bytes32(bytes32(input[0]));
+        bytes32 inverted_input1 = flip_endianness_bytes32(bytes32(input0));
 
         // As opposed to inputs[0], inputs[1] is encoded on 253 bits (because it
         // is a field element) but contains ONLY 3 bits from the digest (it is a
@@ -34,7 +34,7 @@ library Bytes {
         // input[1] is a very small number only represented on 3 field bits, so
         // the meaningful data we want to manipulate is only on the last bytes
         // of this bytes32 input
-        bytes1 last_byte_suffix = get_last_byte(bytes32(input[1]));
+        bytes1 last_byte_suffix = get_last_byte(bytes32(input1));
 
         // After selecting the last byte of input[1], we inverse only this byte
         // and we shift 5 times because we have somehting like: 0x4 initally,
