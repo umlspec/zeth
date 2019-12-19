@@ -39,7 +39,7 @@ contract Bytes_tests {
     function testFlipEndiannessBytes32() public pure returns (bool) {
         // solium-disable-next-line
         bytes32 test_bytes = 0x00000000000000000000000000000000000000000000000000000000000000AF;
-        bytes32 reversed_bytes = Bytes.flip_endianness_bytes32(test_bytes);
+        bytes32 reversed_bytes = Bytes.flip_bit_endianness_bytes32(test_bytes);
 
         // solium-disable-next-line
         bool ok = (reversed_bytes == 0xF500000000000000000000000000000000000000000000000000000000000000);
@@ -72,11 +72,11 @@ contract Bytes_tests {
     }
 
     function testSha256DigestFromFieldElements() public pure returns (bool) {
-        uint256[] memory test_input = new uint[](2);
         // solium-disable-next-line
-        test_input[0] = 0x16cc12975b9a52d97c6a5c0cc91b76b7432306724ed800ef1c29e86393b1e757;
-        test_input[1] = 0x4;
-        bytes32 test_res = Bytes.sha256_digest_from_field_elements(test_input);
+        uint256 test_input_0 = 0x16cc12975b9a52d97c6a5c0cc91b76b7432306724ed800ef1c29e86393b1e757;
+        uint256 test_input_1 = 0x4;
+        bytes32 test_res = Bytes.sha256_digest_from_field_elements(
+            test_input_0, test_input_1);
 
         bool ok = test_res ==
             bytes32(0xeae78dc9c6179438f7001b724e60c4c2ed6ed893303a563e9b4a59dae9483369);
