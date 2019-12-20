@@ -132,7 +132,7 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
     // (ie: Appends the commitments to the tree, appends the nullifiers to the list and so on)
     function check_mkroot_nullifiers_hsig_append_nullifiers_state(
         uint[4] memory vk,
-        uint[] memory primary_inputs) internal {
+        uint[nbInputs] memory primary_inputs) internal {
         // 1. We re-assemble the full root digest and check it is in the tree
         require(
             roots[bytes32(primary_inputs[0])],
@@ -169,7 +169,8 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
     }
 
     function assemble_commitments_and_append_to_state(
-        uint[] memory primary_inputs) internal {
+        uint[nbInputs] memory primary_inputs
+    ) internal {
         // We re-assemble the commitments (JSOutputs)
         for(uint i = 1 + 2 * jsIn ; i < 1 + 2*(jsIn + jsOut); i += 2) {
             // See the way the inputs are ordered in the extended proof
@@ -180,7 +181,9 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
         }
     }
 
-    function process_public_values(uint[] memory primary_inputs) internal {
+    function process_public_values(
+        uint[nbInputs] memory primary_inputs
+    ) internal {
         // 1. We get the vpub_in in wei
         uint vpub_in_zeth_units = Bytes.get_value_from_inputs(
             Bytes.int256ToBytes8(primary_inputs[1 + 2*(jsIn + jsOut)]));
