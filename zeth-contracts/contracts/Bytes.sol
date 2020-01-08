@@ -12,10 +12,21 @@ library Bytes {
         // - input0: a field element containing the low order 253 bits
         // - input1: a field element containing the high order 3 bits
         //
-        // Note that the bits are also packed in reverse order, so the
-        // reassembled value must be bit-reversed.
+        // Here we are leveraging two facts to avoid masking:
+        //
+        // - the contract checks elsewhere that these inputs values are field
+        //   elements (i.e. <p), and
+        //
+        // - the joinsnsplit circuit checks that, as field elements the inputs
+        //   are equal to the binary value specified by their bits.
+        //
+        // Hence we can be sure that the top 3 bits of input0 and the top 253
+        // bits of input1 are 0.
 
         bytes32 recombined_reversed = bytes32(input0 + (input1 << 253));
+
+        // The bits are also packed in reverse order, so the reassembled value
+        // must be bit-reversed.
         bytes32 recombined = flip_bit_endianness_bytes32(recombined_reversed);
         return recombined;
     }
