@@ -81,10 +81,10 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
     // the python wrappers. Use Szabos (10^12 Wei).
     uint64 constant public_unit_value_wei = 1 szabo;
 
-    // Event to emit the address of a commitment in the merke tree Allows for
-    // faster execution of the "Receive" functions on the receiver side.  The
-    // ciphertext of a note is emitted along the address of insertion in the
-    // tree.  Thus, instead of checking that the decrypted note is represented
+    // Event to emit the commitment and its address in the merke tree. Allows
+    // for faster execution of the "Receive" functions on the receiver side.
+    // The ciphertext of a note is emitted along the address of insertion in the
+    // tree. Thus, instead of checking that the decrypted note is represented
     // somewhere in the tree, the recipient just needs to check that the
     // decrypted note opens the commitment at the emitted address
     event LogCommitment(uint commAddr, bytes32 commit);
@@ -97,6 +97,9 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
     // is key to obfuscate the transaction graph while enabling on-chain storage
     // of the coins' data (useful to ease backup of user's wallets)
     event LogSecretCiphers(bytes32 pk_sender, bytes ciphertext);
+
+    // Event to emit the nullifiers for the mix call.
+    event LogNullifier(bytes32 nullifier);
 
     // Debug only
     event LogDebug(string message);
@@ -153,6 +156,8 @@ contract BaseMixer is MerkleTreeMiMC7, ERC223ReceivingContract {
             );
             nullifiers[nullifier] = true;
             ++nf_idx;
+
+            emit LogNullifier(nullifier);
         }
 
         // 3. We re-compute h_sig, re-assemble the expected h_sig and check they
