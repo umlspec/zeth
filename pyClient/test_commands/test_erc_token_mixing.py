@@ -16,52 +16,11 @@ import test_commands.scenario as scenario
 
 import os
 from web3 import Web3, HTTPProvider  # type: ignore
-from solcx import compile_files  # type: ignore
-from os.path import join
 from typing import Any
 
 W3 = Web3(HTTPProvider(constants.WEB3_HTTP_PROVIDER))
 eth = W3.eth  # pylint: disable=no-member,invalid-name
 TEST_GRPC_ENDPOINT = constants.RPC_ENDPOINT
-
-
-def compile_token() -> contracts.Interface:
-    """
-    Compile the testing ERC20 token contract
-    """
-
-    zeth_dir = zeth.utils.get_zeth_dir()
-    allowed_path = join(
-        zeth_dir,
-        "zeth-contracts/node_modules/openzeppelin-solidity/contracts")
-    path_to_token = os.path.join(
-        zeth_dir,
-        "zeth-contracts/node_modules/openzeppelin-solidity/contracts",
-        "token/ERC20/ERC20Mintable.sol")
-    # Compilation
-    compiled_sol = compile_files([path_to_token], allow_paths=allowed_path)
-    token_interface = compiled_sol[path_to_token + ":ERC20Mintable"]
-    return token_interface
-
-
-def deploy_token(
-        deployer_address: str,
-        deployment_gas: int) -> Any:
-    """
-    Deploy the testing ERC20 token contract
-    """
-    token_interface = compile_token()
-    token = eth.contract(
-        abi=token_interface['abi'], bytecode=token_interface['bin'])
-    tx_hash = token.constructor().transact(
-        {'from': deployer_address, 'gas': deployment_gas})
-    tx_receipt = eth.waitForTransactionReceipt(tx_hash)
-
-    token = eth.contract(
-        address=tx_receipt.contractAddress,
-        abi=token_interface['abi'],
-    )
-    return token
 
 
 def print_token_balances(
@@ -141,7 +100,7 @@ def main() -> None:
     (proof_verifier_interface, otsig_verifier_interface, mixer_interface) = \
         zeth.contracts.compile_contracts(zksnark)
     hasher_interface, _ = zeth.contracts.compile_util_contracts()
-    token_instance = deploy_token(deployer_eth_address, 4000000)
+    token_instance = contracts.deploy_token(deployer_eth_address, 4000000)
     (mixer_instance, initial_root) = zeth.contracts.deploy_contracts(
         mk_tree_depth,
         proof_verifier_interface,

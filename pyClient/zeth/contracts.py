@@ -9,12 +9,12 @@ from zeth.encryption import EncryptionPublicKey, encode_encryption_public_key
 from zeth.signing import SigningVerificationKey
 from zeth.zksnark import IZKSnarkProvider, GenericProof
 from zeth.utils import get_trusted_setup_dir, get_contracts_dir, hex_to_int, \
-    get_public_key_from_bytes
+    get_public_key_from_bytes, get_zeth_dir
 
 import json
 import os
 from web3 import Web3, HTTPProvider  # type: ignore
-from solcx import compile_files  # type: ignore
+from solcx import install_solc_pragma, compile_files
 from typing import Tuple, Dict, List, Any
 
 W3 = Web3(HTTPProvider(constants.WEB3_HTTP_PROVIDER))
@@ -22,6 +22,9 @@ W3 = Web3(HTTPProvider(constants.WEB3_HTTP_PROVIDER))
 eth = W3.eth  # pylint: disable=no-member, invalid-name
 
 Interface = Dict[str, Any]
+
+# Installing and setting the right version of the compiler to use
+install_solc_pragma(constants.SOLC_VERSION_PRAGMA)
 
 
 class MixResult:
@@ -73,6 +76,25 @@ def compile_util_contracts() -> Tuple[Interface, Interface]:
     mimc_interface = compiled_sol[path_to_mimc7 + ':' + "MiMC7"]
     tree_interface = compiled_sol[path_to_tree + ':' + "MerkleTreeMiMC7"]
     return mimc_interface, tree_interface
+
+
+def compile_token() -> Interface:
+    """
+    Compile the testing ERC20 token contract
+    """
+
+    zeth_dir = get_zeth_dir()
+    allowed_path = os.path.join(
+        zeth_dir,
+        "zeth-contracts/node_modules/openzeppelin-solidity/contracts")
+    path_to_token = os.path.join(
+        zeth_dir,
+        "zeth-contracts/node_modules/openzeppelin-solidity/contracts",
+        "token/ERC20/ERC20Mintable.sol")
+
+    compiled_sol = compile_files([path_to_token], allow_paths=allowed_path)
+    token_interface = compiled_sol[path_to_token + ":ERC20Mintable"]
+    return token_interface
 
 
 def deploy_mixer(
@@ -222,6 +244,26 @@ def deploy_tree_contract(
         abi=interface['abi']
     )
     return instance
+
+
+def deploy_token(
+        deployer_address: str,
+        deployment_gas: int) -> Any:
+    """
+    Deploy the testing ERC20 token contract
+    """
+    token_interface = compile_token()
+    token = eth.contract(
+        abi=token_interface['abi'], bytecode=token_interface['bin'])
+    tx_hash = token.constructor().transact(
+        {'from': deployer_address, 'gas': deployment_gas})
+    tx_receipt = eth.waitForTransactionReceipt(tx_hash)
+
+    token = eth.contract(
+        address=tx_receipt.contractAddress,
+        abi=token_interface['abi'],
+    )
+    return token
 
 
 def mix(
