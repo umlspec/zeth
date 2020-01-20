@@ -4,6 +4,9 @@
 setup:
 	pip install --upgrade pip
 	pip install -e .
+	python -c "from solcx import install_solc_pragma; \
+		from zeth.constants import SOLC_VERSION_PRAGMA; \
+		install_solc_pragma(SOLC_VERSION_PRAGMA)"
 	$(MAKE) grpc
 
 check: syntax test

@@ -14,7 +14,7 @@ from zeth.utils import get_trusted_setup_dir, get_contracts_dir, hex_to_int, \
 import json
 import os
 from web3 import Web3, HTTPProvider  # type: ignore
-from solcx import install_solc_pragma, compile_files
+from solcx import compile_files
 from typing import Tuple, Dict, List, Any
 
 W3 = Web3(HTTPProvider(constants.WEB3_HTTP_PROVIDER))
@@ -22,9 +22,6 @@ W3 = Web3(HTTPProvider(constants.WEB3_HTTP_PROVIDER))
 eth = W3.eth  # pylint: disable=no-member, invalid-name
 
 Interface = Dict[str, Any]
-
-# Installing and setting the right version of the compiler to use
-install_solc_pragma(constants.SOLC_VERSION_PRAGMA)
 
 
 class MixResult:

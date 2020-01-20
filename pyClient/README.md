@@ -37,5 +37,5 @@ the server).
 
 ## Note on solc compiler installation
 
-Note that `make test` will automatically install solidity compiler in `$HOME$/.solc`
-(when required) and not in the python virtual environment.
+Note that `make setup` will automatically install solidity compiler in `$HOME$/.solc`
+(if required) and not in the python virtual environment.
